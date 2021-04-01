@@ -8,7 +8,10 @@ public class ControllUnit {
 	private DataMemory dataStorage = new DataMemory();
 	// private Parser lstParser = new Parser();
 	private ProgrammMemory programmStorage = new ProgrammMemory();
-
+	// TODO write tests
+	// TODO replace subtraction updatecarry and halfcarry with correct one
+	
+	
 	public static void main(String[] args) {
 		// TODO remove after testing is done, programm starts in GUI
 		ControllUnit controller = new ControllUnit();
@@ -550,17 +553,62 @@ public class ControllUnit {
 		}
 	}
 
-	private void updateCarryFlag(int tempVal) {
-		// TODO Auto-generated method stub
+	private void updateCarryFlag(int tempVal, int subtractionVal) {
+		// TODO test
+		// Special case subtraction
+		boolean setBit = false;
 		
+			
+		if (tempVal >= 0 || subtractionVal == 0) {
+			setBit = true;
+		}
+		
+		if (setBit) {
+			dataStorage.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		} else {
+			dataStorage.clearBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		}
+	}
+	
+	private void updateCarryFlag(int tempVal) {
+		// TODO test
+		// Case addition
+		boolean setBit = false;
+		
+		if (tempVal > 0xFF) {
+			setBit = true;
+		}
+		
+		if (setBit) {
+			dataStorage.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		} else {
+			dataStorage.clearBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		}
+	}
+	
+	private void updateHalfCarryFlag(int tempVal, int subtractionVal) {
+		// TODO not done yet implement half carry
+		// Special case subtraction
+		boolean setBit = false;
+		
+		// wrong
+		if (tempVal >= 0 || subtractionVal == 0) {
+			setBit = true;
+		}
+		
+		if (setBit) {
+			dataStorage.setBit(SpecialRegister.DC.getAddress(), SpecialRegister.DC.getBit());
+		} else {
+			dataStorage.clearBit(SpecialRegister.DC.getAddress(), SpecialRegister.DC.getBit());
+		}
 	}
 	
 	private void updateHalfCarryFlag(int tempVal) {
 		// TODO Auto-generated method stub
-		
 	}
 	
 	private void updateZeroFlag(int value) {
+		// TODO test?
 		if (value == 0) {
 			dataStorage.setBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit());
 		} else {
