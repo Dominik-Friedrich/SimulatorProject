@@ -26,6 +26,10 @@ public class DataMemory {
 		}
 	}
 	
+	public void clearByte(int address) {
+		writeByte(address, 0);
+	}
+	
 	public int readByte(int address) {
 		int retByte = 0;
 		
@@ -106,10 +110,14 @@ public class DataMemory {
 	}
 	
 	public void writeW(int value) {
-		wRegister = value & 11111111;
+		wRegister = value & 0b11111111;
 	}
 	
 	public int readW() {
 		return wRegister;
+	}
+	
+	public void clearW() {
+		writeW(0);
 	}
 }
