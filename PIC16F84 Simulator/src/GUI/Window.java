@@ -6,6 +6,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -68,7 +69,7 @@ public class Window extends JFrame {
 		} catch (Exception e) {
 			System.out.println("Error setting the LAF..." + e);
 		}
-		
+
 		setTitle("PIC18F84 Simulator");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1275, 726);
@@ -80,18 +81,8 @@ public class Window extends JFrame {
 		menuBar.setBounds(0, 0, 1259, 22);
 		getContentPane().add(menuBar);
 
-		JButton file = new JButton("Datei");
+		JButton file = new JButton("Datei");  //Action Listener Notwendig um File Explorer zu öffnen
 		menuBar.add(file);
-
-		File failOne;
-		Scanner failOneIn;
-		final int response;
-		JFileChooser chooser = new JFileChooser(".");
-		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
-		
-
-		
 
 		JPanel specialFunctionRegisterAndW = new JPanel();
 		specialFunctionRegisterAndW
@@ -429,60 +420,53 @@ public class Window extends JFrame {
 		fileregister.setBounds(779, 204, 470, 288);
 		getContentPane().add(fileregister);
 
-		
-
 		table = new JTable();
 		table.setRowSelectionAllowed(false);
 		table.setFillsViewportHeight(true);
 		table.setCellSelectionEnabled(true);
 		table.setModel(new DefaultTableModel(
-			new Object[][] {
-				{" 00", null, null, null, null, null, null, null, null},
-				{" 08", null, null, null, null, null, null, null, null},
-				{" 10", null, null, null, null, null, null, null, null},
-				{" 18", null, null, null, null, null, null, null, null},
-				{" 20", null, null, null, null, null, null, null, null},
-				{" 28", null, null, null, null, null, null, null, null},
-				{" 30", null, null, null, null, null, null, null, null},
-				{" 38", null, null, null, null, null, null, null, null},
-				{" 40", null, null, null, null, null, null, null, null},
-				{" 48", null, null, null, null, null, null, null, null},
-				{" 50", null, null, null, null, null, null, null, null},
-				{" 58", null, null, null, null, null, null, null, null},
-				{" 60", null, null, null, null, null, null, null, null},
-				{" 68", null, null, null, null, null, null, null, null},
-				{" 70", null, null, null, null, null, null, null, null},
-				{" 78", null, null, null, null, null, null, null, null},
-				{" 80", null, null, null, null, null, null, null, null},
-				{" 88", null, null, null, null, null, null, null, null},
-				{" 90", null, null, null, null, null, null, null, null},
-				{" 98", null, null, null, null, null, null, null, null},
-				{" A0", null, null, null, null, null, null, null, null},
-				{" A8", null, null, null, null, null, null, null, null},
-				{" B0", null, null, null, null, null, null, null, null},
-				{" B8", null, null, null, null, null, null, null, null},
-				{" C0", null, null, null, null, null, null, null, null},
-				{" C8", null, null, null, null, null, null, null, null},
-				{" D0", null, null, null, null, null, null, null, null},
-				{" D8", null, null, null, null, null, null, null, null},
-				{" E0", null, null, null, null, null, null, null, null},
-				{" E8", null, null, null, null, null, null, null, null},
-				{" F0", null, null, null, null, null, null, null, null},
-				{"F8", null, null, null, null, null, null, null, null},
-			},
-			new String[] {
-				"0x", "+0", "+1", "+2", "+3", "+4", "+5", "+6", "+7"
-			}
-		) {
-			Class[] columnTypes = new Class[] {
-				Object.class, Integer.class, Integer.class, Integer.class, Integer.class, Integer.class, Integer.class, Integer.class, Integer.class
-			};
+				new Object[][] { { " 00", null, null, null, null, null, null, null, null },
+						{ " 08", null, null, null, null, null, null, null, null },
+						{ " 10", null, null, null, null, null, null, null, null },
+						{ " 18", null, null, null, null, null, null, null, null },
+						{ " 20", null, null, null, null, null, null, null, null },
+						{ " 28", null, null, null, null, null, null, null, null },
+						{ " 30", null, null, null, null, null, null, null, null },
+						{ " 38", null, null, null, null, null, null, null, null },
+						{ " 40", null, null, null, null, null, null, null, null },
+						{ " 48", null, null, null, null, null, null, null, null },
+						{ " 50", null, null, null, null, null, null, null, null },
+						{ " 58", null, null, null, null, null, null, null, null },
+						{ " 60", null, null, null, null, null, null, null, null },
+						{ " 68", null, null, null, null, null, null, null, null },
+						{ " 70", null, null, null, null, null, null, null, null },
+						{ " 78", null, null, null, null, null, null, null, null },
+						{ " 80", null, null, null, null, null, null, null, null },
+						{ " 88", null, null, null, null, null, null, null, null },
+						{ " 90", null, null, null, null, null, null, null, null },
+						{ " 98", null, null, null, null, null, null, null, null },
+						{ " A0", null, null, null, null, null, null, null, null },
+						{ " A8", null, null, null, null, null, null, null, null },
+						{ " B0", null, null, null, null, null, null, null, null },
+						{ " B8", null, null, null, null, null, null, null, null },
+						{ " C0", null, null, null, null, null, null, null, null },
+						{ " C8", null, null, null, null, null, null, null, null },
+						{ " D0", null, null, null, null, null, null, null, null },
+						{ " D8", null, null, null, null, null, null, null, null },
+						{ " E0", null, null, null, null, null, null, null, null },
+						{ " E8", null, null, null, null, null, null, null, null },
+						{ " F0", null, null, null, null, null, null, null, null },
+						{ "F8", null, null, null, null, null, null, null, null }, },
+				new String[] { "0x", "+0", "+1", "+2", "+3", "+4", "+5", "+6", "+7" }) {
+			Class[] columnTypes = new Class[] { Object.class, Integer.class, Integer.class, Integer.class,
+					Integer.class, Integer.class, Integer.class, Integer.class, Integer.class };
+
 			public Class getColumnClass(int columnIndex) {
 				return columnTypes[columnIndex];
 			}
-			boolean[] columnEditables = new boolean[] {
-				false, false, false, false, false, false, false, false, false
-			};
+
+			boolean[] columnEditables = new boolean[] { false, false, false, false, false, false, false, false, false };
+
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
 			}
@@ -499,13 +483,13 @@ public class Window extends JFrame {
 		table.getColumnModel().getColumn(8).setResizable(false);
 		fileregister.setLayout(new BorderLayout(0, 0));
 		table.getTableHeader().setReorderingAllowed(false);
-		//fileregister.add(table);
+		// fileregister.add(table);
 
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		fileregister.add(scrollPane);
-		
+
 		JPanel timing = new JPanel();
 		timing.setLayout(null);
 		timing.setToolTipText("");
@@ -537,5 +521,23 @@ public class Window extends JFrame {
 		controls.add(btnSingleStep);
 		controls.add(btnStart);
 		controls.add(btnStop);
+	}
+
+
+	public void loadLST(ActionEvent e, JPanel programmSourceCode) { //File Explorer
+
+		File failOne;
+		Scanner failOneScan;
+		int response;
+		JFileChooser chooser = new JFileChooser("");
+
+		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		response = chooser.showOpenDialog(null);
+
+		if(response == JFileChooser.APPROVE_OPTION){
+
+			failOne = chooser.getSelectedFile();
+			                                       //Ausgewählte Datei wird in Fenster geladen
+		}
 	}
 }
