@@ -15,12 +15,18 @@ public enum SpecialRegister {
 	// TODO other special registers
 
 	private final int address;
+	private final int bit;
 
 	SpecialRegister(final int address, final int bit) {
 		this.address = address;
+		this.bit = bit;
 	}
 
 	public int getAddress() {
 		return address;
+	}
+	
+	public int getBit() {
+		return bit;
 	}
 }
