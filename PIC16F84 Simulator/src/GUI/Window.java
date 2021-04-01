@@ -524,14 +524,20 @@ public class Window extends JFrame {
 	}
 
 
-	public void actionperformed(ActionEvent e) {
+	public void loadLST(ActionEvent e, JPanel programmSourceCode) { //File Explorer
 
 		File failOne;
 		Scanner failOneScan;
 		int response;
-		JFileChooser chooser = new JFileChooser(".");
+		JFileChooser chooser = new JFileChooser("");
 
 		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		chooser.showOpenDialog(null);
+		response = chooser.showOpenDialog(null);
+
+		if(response == JFileChooser.APPROVE_OPTION){
+
+			failOne = chooser.getSelectedFile();
+			                                       //Ausgewählte Datei wird in Fenster geladen
+		}
 	}
 }
