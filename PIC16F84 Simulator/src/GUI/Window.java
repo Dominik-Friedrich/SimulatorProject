@@ -21,7 +21,11 @@ import java.awt.Color;
 import javax.swing.JLabel;
 import java.awt.GridLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
+
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.Scanner;
 import java.awt.event.ActionEvent;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.GroupLayout;
@@ -76,8 +80,18 @@ public class Window extends JFrame {
 		menuBar.setBounds(0, 0, 1259, 22);
 		getContentPane().add(menuBar);
 
-		JMenu file = new JMenu("Datei");
+		JButton file = new JButton("Datei");
 		menuBar.add(file);
+
+		File failOne;
+		Scanner failOneIn;
+		final int response;
+		JFileChooser chooser = new JFileChooser(".");
+		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+		
+
+		
 
 		JPanel specialFunctionRegisterAndW = new JPanel();
 		specialFunctionRegisterAndW
