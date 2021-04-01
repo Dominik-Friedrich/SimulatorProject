@@ -1,5 +1,6 @@
 import Memory.DataMemory;
 import Memory.ProgrammMemory;
+import Memory.SpecialRegister;
 import Memory.StackMemory;
 
 public class ControllUnit {
@@ -22,16 +23,19 @@ public class ControllUnit {
 		// TODO parser that takes a filepath (LST file) as input and generates the
 		// programmmemory from it
 		// TODO initialise the programmStorage using ^ as input parameter
+		// parser is its own class
 	}
 
 	// Everything below this line is for decoding the OPC and executing it
 	private void execute(final int operationCode) {
 		int fileAdress = operationCode & 0b00000001111111;
 		int destination = operationCode & 0b00000010000000;
+		destination = destination >> 7;
 		int bitAdress = operationCode & 00001110000000;
-		
-		// k is usually 8 Bit long 
-		// in case of goto and call it is 11 Bits long 
+		bitAdress = bitAdress >> 7;
+
+		// k is usually 8 Bit long
+		// in case of goto and call it is 11 Bits long
 		// so it gets remasked in case of a goto or call command
 		int k = operationCode & 0b00000011111111;
 
@@ -60,6 +64,11 @@ public class ControllUnit {
 				// use "destination" to differentiate
 				// d = 1; CLRF f
 				// d = 0; CLRW
+				if (destination == 1) {
+					clrf(fileAdress);
+				} else {
+					clrw();
+				}
 				break;
 
 			case 0x900:
@@ -68,13 +77,13 @@ public class ControllUnit {
 				break;
 
 			case 0x300:
-				// DECF f,d				
+				// DECF f,d
 				decf(fileAdress, destination);
 				break;
 
 			case 0xB00:
 				// DECFSZ f,d
-				decdsz(fileAdress, destination);
+				decfsz(fileAdress, destination);
 				break;
 
 			case 0xA00:
@@ -138,7 +147,6 @@ public class ControllUnit {
 			break;
 
 		case 0x1000:
-			
 
 			// bit-oriented file register operations
 			// bits 11 and 12 to identify which operation
@@ -171,8 +179,15 @@ public class ControllUnit {
 		// literial and control operations
 
 		case 0x2000:
+			// TODO goto and call
 			k = operationCode & 0b00011111111111;
-			// TODO either CALL or GOTO
+			if ((operationCode & 0b100000000000) == 0x800) {
+				// GOTO k
+				goto_(k);
+			} else {
+				// CALL
+				call(k);
+			}
 			break;
 
 		case 0x3000:
@@ -190,12 +205,12 @@ public class ControllUnit {
 				// ANDLW k
 				andlw(k);
 				break;
-			
+
 			case 0x800:
 				// IORLW k
 				iorlw(k);
 				break;
-				
+
 			// fall through is intentional
 			case 0:
 			case 0x100:
@@ -204,7 +219,7 @@ public class ControllUnit {
 				// MOVLW k
 				movlw(k);
 				break;
-			
+
 			// fall through is intentional
 			case 0x400:
 			case 0x500:
@@ -217,15 +232,15 @@ public class ControllUnit {
 			// fall through is intentional
 			case 0xC00:
 			case 0xD00:
-				//SUBLW k
+				// SUBLW k
 				sublw(k);
 				break;
-				
+
 			case 0xA00:
 				// XORLW k
 				xorlw(k);
 				break;
-				
+
 			default:
 				throw new IllegalArgumentException("Unexpected OPC: " + operationCode);
 			}
@@ -237,127 +252,319 @@ public class ControllUnit {
 	}
 
 	private void xorlw(int k) {
-		// TODO Auto-generated method stub
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readW() ^ k;
+
+		updateZeroFlag(tempVal);
 		
+		dataStorage.writeW(tempVal);
 	}
 
 	private void sublw(int k) {
-		// TODO Auto-generated method stub
+		// TODO test
+		int tempVal = 0;
+		tempVal = k - dataStorage.readW();
+
+		updateCarryFlag(tempVal);
+		updateHalfCarryFlag(tempVal);
+		updateZeroFlag(tempVal);
 		
+		dataStorage.writeW(tempVal);
 	}
 
+	private void sleep() {
+		// TODO Auto-generated method stub
+
+	}
+	
+	private void return_() {
+		// TODO Auto-generated method stub
+
+	}
+	
 	private void retlw(int k) {
 		// TODO Auto-generated method stub
-		
+
+	}
+	
+	private void retfie() {
+		// TODO Auto-generated method stub
+
 	}
 
 	private void movlw(int k) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		dataStorage.writeW(k);
 	}
 
 	private void iorlw(int k) {
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readW() | k;
+
+		updateZeroFlag(tempVal);
+		
+		dataStorage.writeW(tempVal);
+	}
+
+	private void goto_(int k) {
 		// TODO Auto-generated method stub
 		
 	}
-
-	private void andlw(int k) {
+	
+	private void clrwdt() {
 		// TODO Auto-generated method stub
+
+	}
+	
+	private void call(int k) {
+		// TODO Auto-generated method stub
+
+	}
+	
+	private void andlw(int k) {
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readW() & k;
+
+		updateZeroFlag(tempVal);
 		
+		dataStorage.writeW(tempVal);
 	}
 
 	private void addlw(int k) {
-		// TODO Auto-generated method stub
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readW() & k;
+
+		updateCarryFlag(tempVal);
+		updateHalfCarryFlag(tempVal);
+		updateZeroFlag(tempVal);
 		
+		dataStorage.writeW(tempVal);
 	}
 
 	private void btfss(int fileAdress, int bitAdress) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private void btfsc(int fileAdress, int bitAdress) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private void bsf(int fileAdress, int bitAdress) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		dataStorage.setBit(fileAdress, bitAdress);
 	}
 
 	private void bcf(int fileAdress, int bitAdress) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		dataStorage.clearBit(fileAdress, bitAdress);
 	}
 
 	private void xorwf(int fileAdress, int destination) {
 		// TODO Auto-generated method stub
-		
+		int tempVal = 0;
+		tempVal = dataStorage.readW() ^ dataStorage.readByte(fileAdress);
+
+		updateZeroFlag(tempVal);
+
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
 	private void swapf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		int tempVal = 0;
+		int tempVal2 = 0;
+
+		// put lower Nibble to position of higher Nibble
+		tempVal = dataStorage.readByte(fileAdress) & 0b1111;
+		tempVal = tempVal << 4;
+
+		// put higher Nibble to position of lower Nibble
+		tempVal2 = dataStorage.readByte(fileAdress) & 0b11110000;
+		tempVal2 = tempVal2 >> 4;
+
+		tempVal = tempVal + tempVal2;
+
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
+
 	}
 
 	private void subwf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress) - dataStorage.readW();
+
+		updateCarryFlag(tempVal);
+		updateHalfCarryFlag(tempVal);
+		updateZeroFlag(tempVal);
 		
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
 	private void rrf(int fileAdress, int destination) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private void rlf(int fileAdress, int destination) {
 		// TODO Auto-generated method stub
-		
+
+	}
+	
+	private void nop() {
+		// TODO Auto-generated method stub
+
+	}
+	
+	private void movwf(int fileAdress) {
+		// TODO Auto-generated method stub
+
 	}
 
 	private void movf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress);
+
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
 	private void iorwf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readW() | dataStorage.readByte(fileAdress);
+
+		updateZeroFlag(tempVal);
+
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
 	private void incfsz(int fileAdress, int destination) {
 		// TODO Auto-generated method stub
-		
+		// ask prof
 	}
 
 	private void incf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress) + 1;
+
+		updateZeroFlag(tempVal);
+
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
-	private void decdsz(int fileAdress, int destination) {
+	private void decfsz(int fileAdress, int destination) {
 		// TODO Auto-generated method stub
-		
+		// ask prof
 	}
 
 	private void decf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress) - 1;
+
+		updateZeroFlag(tempVal);
+
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
 	private void comf(int fileAdress, int destination) {
 		// TODO Auto-generated method stub
-		
+		// ask prof
+
+	}
+
+	private void clrw() {
+		// TODO test
+		dataStorage.clearW();
+		updateZeroFlag(0);
+	}
+
+	private void clrf(int fileAdress) {
+		// TODO test
+		dataStorage.clearByte(fileAdress);
+		updateZeroFlag(0);
 	}
 
 	private void andwf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readW() & dataStorage.readByte(fileAdress);
+
+		updateZeroFlag(tempVal);
+
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
 	private void addwf(int fileAdress, int destination) {
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress) + dataStorage.readW();
+		
+		updateCarryFlag(tempVal);
+		updateHalfCarryFlag(tempVal);
+		updateZeroFlag(tempVal);
+		
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
+	}
+
+	private void updateCarryFlag(int tempVal) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	private void updateHalfCarryFlag(int tempVal) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	private void updateZeroFlag(int value) {
+		if (value == 0) {
+			dataStorage.setBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit());
+		} else {
+			dataStorage.clearBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit());
+		}
 	}
 }
