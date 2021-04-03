@@ -1,3 +1,4 @@
+package Controller;
 import Memory.DataMemory;
 import Memory.ProgrammMemory;
 import Memory.SpecialRegister;
@@ -10,16 +11,16 @@ public class ControllUnit {
 	private ProgrammMemory programmStorage = new ProgrammMemory();
 	// TODO write tests
 	// TODO replace subtraction updatecarry and halfcarry with correct one
-	
-	
-	public static void main(String[] args) {
-		// TODO remove after testing is done, programm starts in GUI
-		ControllUnit controller = new ControllUnit();
-	}
 
 	public ControllUnit() {
 		// TODO Auto-generated constructor stub
-		execute(0b00011111111111);
+	}
+	
+	// Used for testing
+	public void attachNewStorage(DataMemory dataStorage) {
+		if (dataStorage != null) {
+			this.dataStorage = dataStorage;
+		}
 	}
 
 	public void newProgramm(final String filepath) {
@@ -30,16 +31,16 @@ public class ControllUnit {
 	}
 
 	// Everything below this line is for decoding the OPC and executing it
-	private void execute(final int operationCode) {
-		int fileAdress = operationCode & 0b00000001111111;
-		int destination = operationCode & 0b00000010000000;
+	public void execute(final int operationCode) {
+		int fileAdress = operationCode & 0b00_0000_0111_1111;
+		int destination = operationCode & 0b00_0000_1000_0000;
 		destination = destination >> 7;
-		int bitAdress = operationCode & 00001110000000;
+		int bitAdress = operationCode & 0b00_0011_1000_0000;
 		bitAdress = bitAdress >> 7;
-
+		
 		// k is usually 8 Bit long
 		// in case of goto and call it is 11 Bits long
-		// so it gets remasked in case of a goto or call command
+		// so it gets re-masked later in case of a goto or call command
 		int k = operationCode & 0b00000011111111;
 
 		// top 2 bits to identify operation class
@@ -255,7 +256,6 @@ public class ControllUnit {
 	}
 
 	private void xorlw(int k) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readW() ^ k;
 
@@ -265,12 +265,11 @@ public class ControllUnit {
 	}
 
 	private void sublw(int k) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = k - dataStorage.readW();
 
-		updateCarryFlag(tempVal);
-		updateHalfCarryFlag(tempVal);
+		updateCarryFlag(tempVal, dataStorage.readW());
+		updateHalfCarryFlag(tempVal, dataStorage.readW());
 		updateZeroFlag(tempVal);
 		
 		dataStorage.writeW(tempVal);
@@ -297,12 +296,10 @@ public class ControllUnit {
 	}
 
 	private void movlw(int k) {
-		// TODO test
 		dataStorage.writeW(k);
 	}
 
 	private void iorlw(int k) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readW() | k;
 
@@ -327,7 +324,6 @@ public class ControllUnit {
 	}
 	
 	private void andlw(int k) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readW() & k;
 
@@ -337,10 +333,9 @@ public class ControllUnit {
 	}
 
 	private void addlw(int k) {
-		// TODO test
 		int tempVal = 0;
-		tempVal = dataStorage.readW() & k;
-
+		tempVal = dataStorage.readW() + k;
+		
 		updateCarryFlag(tempVal);
 		updateHalfCarryFlag(tempVal);
 		updateZeroFlag(tempVal);
@@ -359,17 +354,14 @@ public class ControllUnit {
 	}
 
 	private void bsf(int fileAdress, int bitAdress) {
-		// TODO test
 		dataStorage.setBit(fileAdress, bitAdress);
 	}
 
 	private void bcf(int fileAdress, int bitAdress) {
-		// TODO test
 		dataStorage.clearBit(fileAdress, bitAdress);
 	}
 
 	private void xorwf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
 		int tempVal = 0;
 		tempVal = dataStorage.readW() ^ dataStorage.readByte(fileAdress);
 
@@ -383,7 +375,6 @@ public class ControllUnit {
 	}
 
 	private void swapf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		int tempVal2 = 0;
 
@@ -406,12 +397,11 @@ public class ControllUnit {
 	}
 
 	private void subwf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(fileAdress) - dataStorage.readW();
 
-		updateCarryFlag(tempVal);
-		updateHalfCarryFlag(tempVal);
+		updateCarryFlag(tempVal, dataStorage.readW());
+		updateHalfCarryFlag(tempVal, dataStorage.readW());
 		updateZeroFlag(tempVal);
 		
 		if (destination == 0) {
@@ -433,7 +423,7 @@ public class ControllUnit {
 	
 	private void nop() {
 		// TODO Auto-generated method stub
-
+		// probably dont even need a method for NOP
 	}
 	
 	private void movwf(int fileAdress) {
@@ -442,10 +432,11 @@ public class ControllUnit {
 	}
 
 	private void movf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(fileAdress);
 
+		updateZeroFlag(tempVal);
+		
 		if (destination == 0) {
 			dataStorage.writeW(tempVal);
 		} else {
@@ -454,7 +445,6 @@ public class ControllUnit {
 	}
 
 	private void iorwf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readW() | dataStorage.readByte(fileAdress);
 
@@ -473,7 +463,6 @@ public class ControllUnit {
 	}
 
 	private void incf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(fileAdress) + 1;
 
@@ -492,7 +481,6 @@ public class ControllUnit {
 	}
 
 	private void decf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(fileAdress) - 1;
 
@@ -512,19 +500,16 @@ public class ControllUnit {
 	}
 
 	private void clrw() {
-		// TODO test
 		dataStorage.clearW();
 		updateZeroFlag(0);
 	}
 
 	private void clrf(int fileAdress) {
-		// TODO test
 		dataStorage.clearByte(fileAdress);
 		updateZeroFlag(0);
 	}
 
 	private void andwf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readW() & dataStorage.readByte(fileAdress);
 
@@ -538,10 +523,9 @@ public class ControllUnit {
 	}
 
 	private void addwf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(fileAdress) + dataStorage.readW();
-		
+
 		updateCarryFlag(tempVal);
 		updateHalfCarryFlag(tempVal);
 		updateZeroFlag(tempVal);
@@ -553,8 +537,9 @@ public class ControllUnit {
 		}
 	}
 
-	private void updateCarryFlag(int tempVal, int subtractionVal) {
-		// TODO test
+	
+	// TODO methods should be private, public only for testing purposes
+	public void updateCarryFlag(int tempVal, int subtractionVal) {
 		// Special case subtraction
 		boolean setBit = false;
 		
@@ -570,8 +555,7 @@ public class ControllUnit {
 		}
 	}
 	
-	private void updateCarryFlag(int tempVal) {
-		// TODO test
+	public void updateCarryFlag(int tempVal) {
 		// Case addition
 		boolean setBit = false;
 		
@@ -586,16 +570,16 @@ public class ControllUnit {
 		}
 	}
 	
-	private void updateHalfCarryFlag(int tempVal, int subtractionVal) {
-		// TODO not done yet implement half carry
+	public void updateHalfCarryFlag(int tempVal, int subtractionVal) {
+		// TODO ask prof how halfcarry works not done yet implement half carry 
 		// Special case subtraction
 		boolean setBit = false;
 		
 		// wrong
-		if (tempVal >= 0 || subtractionVal == 0) {
+		/*if (tempVal >= 0 || subtractionVal == 0) {
 			setBit = true;
 		}
-		
+		*/
 		if (setBit) {
 			dataStorage.setBit(SpecialRegister.DC.getAddress(), SpecialRegister.DC.getBit());
 		} else {
@@ -603,12 +587,11 @@ public class ControllUnit {
 		}
 	}
 	
-	private void updateHalfCarryFlag(int tempVal) {
+	public void updateHalfCarryFlag(int tempVal) {
 		// TODO Auto-generated method stub
 	}
 	
-	private void updateZeroFlag(int value) {
-		// TODO test?
+	public void updateZeroFlag(int value) { 
 		if (value == 0) {
 			dataStorage.setBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit());
 		} else {
