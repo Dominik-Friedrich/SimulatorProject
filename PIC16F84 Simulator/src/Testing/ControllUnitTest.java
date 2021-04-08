@@ -27,8 +27,6 @@ class ControllUnitTest {
 		memoryTestee.writeW(valW);
 	}
 
-	// TODO add tests for flags
-
 	@Test
 	void testADDWF() {
 		// save in register
@@ -118,18 +116,52 @@ class ControllUnitTest {
 		assertEquals(valR, memoryTestee.readW());
 	}
 
-	// TODO MOVWF, NOP, RLF, RRF
-	
+	// TODO MOVWF, NOP
+
+	@Test
+	void testRLF() {
+		controlTestee.execute(0b1101_1001_0000);
+		assertEquals(16, memoryTestee.readByte(testRegister));
+		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+
+		controlTestee.execute(0b1101_1001_0000);
+		assertEquals(32, memoryTestee.readByte(testRegister));
+		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+
+		memoryTestee.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+
+		controlTestee.execute(0b1101_1001_0000);
+		assertEquals(64 + 1, memoryTestee.readByte(testRegister));
+		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+
+		controlTestee.execute(0b1101_1001_0000);
+		assertEquals(128 + 2, memoryTestee.readByte(testRegister));
+		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+
+		controlTestee.execute(0b1101_1001_0000);
+		assertEquals(4, memoryTestee.readByte(testRegister));
+		assertEquals(1, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+	}
+
 	@Test
 	void testRRF() {
 		controlTestee.execute(0b1100_1001_0000);
 		assertEquals(4, memoryTestee.readByte(testRegister));
 		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
-		
-		memoryTestee.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
-		
-		
 
+		memoryTestee.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+
+		controlTestee.execute(0b1100_1001_0000);
+		assertEquals(2 + 128, memoryTestee.readByte(testRegister));
+		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+
+		controlTestee.execute(0b1100_1001_0000);
+		assertEquals(1 + 64, memoryTestee.readByte(testRegister));
+		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+
+		controlTestee.execute(0b1100_1001_0000);
+		assertEquals(32, memoryTestee.readByte(testRegister));
+		assertEquals(1, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
 	}
 
 	@Test
@@ -226,6 +258,11 @@ class ControllUnitTest {
 	void testSUBLW() {
 		controlTestee.execute(0b11_1100_0000_0000 + valR);
 		assertEquals(valR - valW, memoryTestee.readW());
+
+		setUp();
+		controlTestee.execute(0b11_1100_0000_0000);
+		memoryTestee.writeW(-1);
+		assertEquals(255, memoryTestee.readW());
 	}
 
 	@Test
@@ -254,17 +291,5 @@ class ControllUnitTest {
 		assertEquals(1, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
 		controlTestee.updateCarryFlag(200);
 		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
-		
-		// subtract
-		controlTestee.updateCarryFlag(200, 100);
-		assertEquals(1, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
-		controlTestee.updateCarryFlag(-100, 150);
-		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
-		controlTestee.updateCarryFlag(200, 0);
-		assertEquals(1, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
-		controlTestee.updateCarryFlag(-1, 5);
-		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
-		controlTestee.updateCarryFlag(-100, 0);
-		assertEquals(1, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
 	}
 }
