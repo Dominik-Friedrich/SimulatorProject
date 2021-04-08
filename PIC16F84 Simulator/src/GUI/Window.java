@@ -37,11 +37,13 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.BorderLayout;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.JTable;
 import javax.swing.JScrollBar;
 import javax.swing.table.DefaultTableModel;
 
+import org.graalvm.compiler.lir.CompositeValue.Component;
 import org.junit.jupiter.params.provider.EmptySource;
 
 import Read.ReadLST;
@@ -90,37 +92,9 @@ public class Window extends JFrame implements ActionListener {
 		menuBar.setBounds(0, 0, 1259, 22);
 		getContentPane().add(menuBar);
 
-		JButton file = new JButton("Datei");  //Action Listener Notwendig um File Explorer zu öffnen
+		JButton file = new JButton("Datei"); // Action Listener Notwendig um File Explorer zu öffnen
 		menuBar.add(file);
 
-		file.addActionListener(new ActionListener(){  
-			public void actionPerformed(ActionEvent e){  
-
-				int response;
-				File fileOne;
-				JFileChooser chooser = new JFileChooser("");
-				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-				response = chooser.showOpenDialog(null);
-
-                if(response == JFileChooser.APPROVE_OPTION){
-				    fileOne = chooser.getSelectedFile();
-					String path = fileOne.getAbsolutePath();
-					ReadLST list = new ReadLST(path);
-					try {
-						list.initializeScanner();
-					} catch (FileNotFoundException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-					ArrayList<String> liste = new ArrayList<String>();
-					liste = list.readFile();
-
-				}			
-			}  
-			});  
-
-
-		
 		JPanel specialFunctionRegisterAndW = new JPanel();
 		specialFunctionRegisterAndW
 				.setBorder(new TitledBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(192, 192, 192)), "SFR + W",
@@ -558,6 +532,35 @@ public class Window extends JFrame implements ActionListener {
 		controls.add(btnSingleStep);
 		controls.add(btnStart);
 		controls.add(btnStop);
+
+		file.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				int response;
+				File fileOne;
+				JFileChooser chooser = new JFileChooser("");
+				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+				response = chooser.showOpenDialog(null);
+
+				if (response == JFileChooser.APPROVE_OPTION) {
+					fileOne = chooser.getSelectedFile();
+					String path = fileOne.getAbsolutePath();
+					ReadLST list = new ReadLST(path);
+					try {
+						list.initializeScanner();
+					} catch (FileNotFoundException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					ArrayList<String> liste = new ArrayList<String>();
+					liste = list.readFile();
+					for (int i = 0; i < liste.size(); i++) {
+						JLabel label = new JLabel(liste.get(i));
+						programmSourceCode.add(label);
+					}
+				}
+			}
+		});
 	}
 
 }
