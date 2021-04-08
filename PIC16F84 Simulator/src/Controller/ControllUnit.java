@@ -1,4 +1,7 @@
 package Controller;
+
+import java.util.ArrayList;
+
 import Memory.DataMemory;
 import Memory.ProgrammMemory;
 import Memory.SpecialRegister;
@@ -10,10 +13,37 @@ public class ControllUnit {
 	// private Parser lstParser = new Parser();
 	private ProgrammMemory programmStorage = new ProgrammMemory();
 
-	public ControllUnit() {
-		// TODO Auto-generated constructor stub
-	}
+	private int programmCounter = 0;
 	
+	private int runtimeCount = 0;
+	private int currFrequency = 0; // in kHz
+	private boolean running = false;
+
+	public ControllUnit() {
+		run();
+	}
+
+	public int getRuntime() {
+		int runtime = 0;
+		
+		// runtime in ms
+		runtime = runtimeCount * 1/(currFrequency * 1000) * 4;
+		return runtime;
+	}
+
+	// TODO interrupt checks
+	private void run() {
+		int lastRunTime = 0;
+		
+		while (running) {
+			lastRunTime = getRuntime();
+			execute(programmStorage.read(programmCounter));
+			incrementPC();
+			// TODO sleep(getRuntime() - lastRunTime);
+			// updateGUI
+		}
+	}
+
 	// Used for testing
 	public void attachNewStorage(DataMemory dataStorage) {
 		if (dataStorage != null) {
@@ -21,21 +51,33 @@ public class ControllUnit {
 		}
 	}
 
-	public void newProgramm(final String filepath) {
-		// TODO parser that takes a filepath (LST file) as input and generates the
-		// programmmemory from it
-		// TODO initialise the programmStorage using ^ as input parameter
-		// parser is its own class
+	public void newProgramm(ArrayList<Integer> instructions) {
+		programmStorage.newProgramm(instructions);
+		dataStorage.powerOnReset();
+		runtimeCount = 0;
+	}
+	
+	private void incrementPC() {
+		programmCounter++;
+		if (programmCounter > 8191) {
+			programmCounter = 0;
+		}
+		
+		int PCLATH = programmCounter & 0x1F0;
+		PCLATH = PCLATH >> 8;
+		
+		dataStorage.writeByte(SpecialRegister.PCL.getAddress(), programmCounter);
+		dataStorage.writeByte(SpecialRegister.PCLATH0.getAddress(), PCLATH);
 	}
 
-	// Everything below this line is for decoding the OPC and executing it
+	// decoding the OPC and executing it
 	public void execute(final int operationCode) {
 		int fileAdress = operationCode & 0b00_0000_0111_1111;
 		int destination = operationCode & 0b00_0000_1000_0000;
 		destination = destination >> 7;
 		int bitAdress = operationCode & 0b00_0011_1000_0000;
 		bitAdress = bitAdress >> 7;
-		
+
 		// k is usually 8 Bit long
 		// in case of goto and call it is 11 Bits long
 		// so it gets re-masked later in case of a goto or call command
@@ -118,34 +160,34 @@ public class ControllUnit {
 						// CLRWDT
 						clrwdt();
 						break;
-					
+
 					case 0x63:
 						// SLEEP
 						_sleep();
 						break;
-					
+
 					case 0x9:
 						// RETFIE
 						retfie();
 						break;
-						
+
 					case 0x8:
 						// RETURN
 						_return();
 						break;
-					
+
 					case 0:
 						// NOP
+						nop();
 						break;
-						
+
 					default:
 						throw new IllegalArgumentException("Unexpected OPC: " + operationCode);
 					}
-					
+
 				}
 				// TODO multiple operations
-				
-				
+
 				break;
 
 			case 0xD00:
@@ -287,8 +329,10 @@ public class ControllUnit {
 		tempVal = dataStorage.readW() ^ k;
 
 		updateZeroFlag(tempVal);
-		
+
 		dataStorage.writeW(tempVal);
+
+		runtimeCount++;
 	}
 
 	private void sublw(int k) {
@@ -296,7 +340,7 @@ public class ControllUnit {
 		tempVal = dataStorage.readW();
 		tempVal = ~tempVal;
 		tempVal += 1;
-		
+
 		dataStorage.writeW(tempVal);
 		addlw(k);
 	}
@@ -304,25 +348,38 @@ public class ControllUnit {
 	private void _sleep() {
 		// TODO Auto-generated method stub
 
+		runtimeCount++;
 	}
-	
+
 	private void _return() {
-		// TODO Auto-generated method stub
-
+		programmCounter = stack.returnHappened();
+		
+		runtimeCount++;
+		runtimeCount++;
 	}
-	
+
 	private void retlw(int k) {
-		// TODO Auto-generated method stub
-
+		// TODO test
+		dataStorage.writeW(k);
+		programmCounter = stack.returnHappened();
+		
+		runtimeCount++;
+		runtimeCount++;
 	}
-	
-	private void retfie() {
-		// TODO Auto-generated method stub
 
+	private void retfie() {
+		// TODO test
+		programmCounter = stack.returnHappened();
+		dataStorage.setBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit());
+
+		runtimeCount++;
+		runtimeCount++;
 	}
 
 	private void movlw(int k) {
 		dataStorage.writeW(k);
+
+		runtimeCount++;
 	}
 
 	private void iorlw(int k) {
@@ -330,61 +387,104 @@ public class ControllUnit {
 		tempVal = dataStorage.readW() | k;
 
 		updateZeroFlag(tempVal);
-		
+
 		dataStorage.writeW(tempVal);
+
+		runtimeCount++;
 	}
 
 	private void goto_(int k) {
-		// TODO Auto-generated method stub
+		// TODO test
 		
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(SpecialRegister.PCLATH0.getAddress());
+		tempVal = tempVal & 0b0001_1000;
+		tempVal = tempVal << 11;
+			
+		// PCL and PCLATH are updated in incrementPC() afterwards
+		programmCounter = k + tempVal;
+
+		runtimeCount++;
+		runtimeCount++;
 	}
-	
+
 	private void clrwdt() {
 		// TODO Auto-generated method stub
 
+		runtimeCount++;
 	}
-	
-	private void call(int k) {
-		// TODO Auto-generated method stub
 
+	private void call(int k) {
+		// TODO test
+		// TODO maybe +1 needed
+		stack.callHappened(programmCounter);
+		
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(SpecialRegister.PCLATH0.getAddress());
+		tempVal = tempVal & 0b0001_1000;
+		tempVal = tempVal << 11;
+			
+		// PCL and PCLATH are updated in incrementPC() afterwards
+		programmCounter = k + tempVal;
+		
+		runtimeCount++;
+		runtimeCount++;
 	}
-	
+
 	private void andlw(int k) {
 		int tempVal = 0;
 		tempVal = dataStorage.readW() & k;
 
 		updateZeroFlag(tempVal);
-		
+
 		dataStorage.writeW(tempVal);
+
+		runtimeCount++;
 	}
 
 	private void addlw(int k) {
 		int tempVal = 0;
 		tempVal = dataStorage.readW() + k;
-		
+
 		updateCarryFlag(tempVal);
 		updateHalfCarryFlag(dataStorage.readW(), k);
 		updateZeroFlag(tempVal);
-		
+
 		dataStorage.writeW(tempVal);
+
+		runtimeCount++;
 	}
 
 	private void btfss(int fileAdress, int bitAdress) {
-		// TODO Auto-generated method stub
-
+		// TODO test
+		if (dataStorage.readBit(fileAdress, bitAdress) == 1) {
+			nop();
+			incrementPC();
+		}
+		
+		runtimeCount++;
 	}
 
 	private void btfsc(int fileAdress, int bitAdress) {
-		// TODO Auto-generated method stub
-
+		// TODO test
+		if (dataStorage.readBit(fileAdress, bitAdress) == 0) {
+			nop();
+			incrementPC();
+		}
+		
+		runtimeCount++;
 	}
 
 	private void bsf(int fileAdress, int bitAdress) {
 		dataStorage.setBit(fileAdress, bitAdress);
+
+		runtimeCount++;
 	}
 
 	private void bcf(int fileAdress, int bitAdress) {
 		dataStorage.clearBit(fileAdress, bitAdress);
+
+		runtimeCount++;
 	}
 
 	private void xorwf(int fileAdress, int destination) {
@@ -398,6 +498,8 @@ public class ControllUnit {
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
 
 	private void swapf(int fileAdress, int destination) {
@@ -420,6 +522,7 @@ public class ControllUnit {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
 
+		runtimeCount++;
 	}
 
 	private void subwf(int fileAdress, int destination) {
@@ -428,7 +531,7 @@ public class ControllUnit {
 		tempVal = ~tempVal;
 		tempVal += 1;
 		dataStorage.writeW(tempVal);
-				
+
 		addwf(fileAdress, destination);
 	}
 
@@ -436,28 +539,30 @@ public class ControllUnit {
 		int tempVal = 0;
 		int tempBit = 0;
 		tempVal = dataStorage.readByte(fileAdress);
-		
+
 		// save carry
 		tempBit = dataStorage.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
-		
+
 		// move the least significant bit into carry
 		if ((tempVal & 0b1) > 0) {
 			dataStorage.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
 		} else {
 			dataStorage.clearBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
 		}
-		
+
 		// add tempBit as the most significant bit (8th bit in our case)
 		tempVal = tempVal >> 1;
 		tempBit = tempBit << 7;
-		
+
 		tempVal = tempVal | tempBit;
-		
+
 		if (destination == 0) {
 			dataStorage.writeW(tempVal);
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
 
 	private void rlf(int fileAdress, int destination) {
@@ -465,37 +570,40 @@ public class ControllUnit {
 		int tempVal = 0;
 		int tempBit = 0;
 		tempVal = dataStorage.readByte(fileAdress);
-		
+
 		// save carry
 		tempBit = dataStorage.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
-		
+
 		// move the most significant bit into carry
 		if ((tempVal & 0b1000_0000) > 0) {
 			dataStorage.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
 		} else {
 			dataStorage.clearBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
 		}
-		
+
 		// add tempBit as the least significant bit (8th bit in our case)
 		tempVal = tempVal << 1;
-		
+
 		tempVal = tempVal | tempBit;
-		
+
 		if (destination == 0) {
 			dataStorage.writeW(tempVal);
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
-	}
-	
-	private void nop() {
-		// TODO Auto-generated method stub
-		// probably dont even need a method for NOP
-	}
-	
-	private void movwf(int fileAdress) {
-		// TODO Auto-generated method stub
 
+		runtimeCount++;
+	}
+
+	private void nop() {
+		runtimeCount++;
+	}
+
+	private void movwf(int fileAdress) {
+		// TODO test
+		dataStorage.writeByte(fileAdress, dataStorage.readW());
+		
+		runtimeCount++;
 	}
 
 	private void movf(int fileAdress, int destination) {
@@ -503,12 +611,14 @@ public class ControllUnit {
 		tempVal = dataStorage.readByte(fileAdress);
 
 		updateZeroFlag(tempVal);
-		
+
 		if (destination == 0) {
 			dataStorage.writeW(tempVal);
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
 
 	private void iorwf(int fileAdress, int destination) {
@@ -522,11 +632,18 @@ public class ControllUnit {
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
 
 	private void incfsz(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		// ask prof
+		// TODO test
+		incf(fileAdress, destination);
+
+		if (dataStorage.readBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit()) > 0) {
+			nop();
+			incrementPC();
+		}
 	}
 
 	private void incf(int fileAdress, int destination) {
@@ -540,11 +657,17 @@ public class ControllUnit {
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
 
 	private void decfsz(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		// ask prof
+		// TODO test
+		decf(fileAdress, destination);
+
+		if (dataStorage.readBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit()) > 0) {
+			nop();
+		}
 	}
 
 	private void decf(int fileAdress, int destination) {
@@ -558,22 +681,39 @@ public class ControllUnit {
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
 
 	private void comf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-		// ask prof
+		// TODO test
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress);
+		tempVal = ~tempVal;
+		
+		updateZeroFlag(tempVal);
 
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
+
+		runtimeCount++;
 	}
 
 	private void clrw() {
 		dataStorage.clearW();
 		updateZeroFlag(0);
+
+		runtimeCount++;
 	}
 
 	private void clrf(int fileAdress) {
 		dataStorage.clearByte(fileAdress);
 		updateZeroFlag(0);
+
+		runtimeCount++;
 	}
 
 	private void andwf(int fileAdress, int destination) {
@@ -587,6 +727,8 @@ public class ControllUnit {
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
 
 	private void addwf(int fileAdress, int destination) {
@@ -596,14 +738,16 @@ public class ControllUnit {
 		updateCarryFlag(tempVal);
 		updateHalfCarryFlag(dataStorage.readByte(fileAdress), dataStorage.readW());
 		updateZeroFlag(tempVal);
-		
+
 		if (destination == 0) {
 			dataStorage.writeW(tempVal);
 		} else {
 			dataStorage.writeByte(fileAdress, tempVal);
 		}
+
+		runtimeCount++;
 	}
-	
+
 	public void updateCarryFlag(int tempVal) {
 		if (tempVal > 0xFF) {
 			dataStorage.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
@@ -611,21 +755,23 @@ public class ControllUnit {
 			dataStorage.clearBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
 		}
 	}
-	
+
 	public void updateHalfCarryFlag(int tempVal1, int tempVal2) {
 		// TODO test
 		tempVal1 = tempVal1 & 0xF;
 		tempVal2 = tempVal2 & 0xF;
 		int tempVal = tempVal1 + tempVal2;
-		
+
 		if (tempVal > 0xF) {
 			dataStorage.setBit(SpecialRegister.DC.getAddress(), SpecialRegister.DC.getBit());
 		} else {
 			dataStorage.clearBit(SpecialRegister.DC.getAddress(), SpecialRegister.DC.getBit());
 		}
 	}
-	
-	public void updateZeroFlag(int value) { 
+
+	public void updateZeroFlag(int value) {
+		value = value & 0xFF;
+		
 		if (value == 0) {
 			dataStorage.setBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit());
 		} else {

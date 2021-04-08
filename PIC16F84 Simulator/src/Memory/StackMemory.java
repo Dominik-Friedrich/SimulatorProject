@@ -5,11 +5,10 @@ public class StackMemory {
 	private int stackCounter = 0;
 	
 	public StackMemory() {
-		// TODO idky
+		// TODO maybe mask adress, stack is 13bits?
 	}
 	
 	public void callHappened (int returnAddress) {
-		// TODO maybe mask address
 		stack[stackCounter] = returnAddress;
 		stackCounter++;
 		
@@ -27,7 +26,6 @@ public class StackMemory {
 			stackCounter = 7;
 		}
 		
-		// TODO maybe mask address
 		return stack[stackCounter];
 	}
 }

@@ -5,12 +5,8 @@ public class DataMemory {
 	private int wRegister = 0;
 
 	public DataMemory() {
-		// TODO set values to "values on power on reset" and normal reset
-		// reset() which does the above in a method
 	}
 
-	// TODO indirect adressing
-	// TODO if target address == 0 -> use value in FSR register as target adress
 	public void powerOnReset() {
 		// Bank 0
 		writeByte(SpecialRegister.PCL.getAddress(), 0);
@@ -49,6 +45,10 @@ public class DataMemory {
 	}
 
 	public void writeByte(int address, int value) {
+		if(address == 0) {
+			address = readByte(SpecialRegister.FSR.getAddress());
+		}
+		
 		value = value & 0b11111111;
 
 		if (isMirrored(address)) {
@@ -66,10 +66,18 @@ public class DataMemory {
 	}
 
 	public void clearByte(int address) {
+		if(address == 0) {
+			address = readByte(SpecialRegister.FSR.getAddress());
+		}
+		
 		writeByte(address, 0);
 	}
 
 	public int readByte(int address) {
+		if(address == 0) {
+			address = readByte(SpecialRegister.FSR.getAddress());
+		}
+		
 		int retByte = 0;
 
 		if (readBit(SpecialRegister.RP0.getAddress(), SpecialRegister.RP0.getBit()) == 0) {
@@ -84,6 +92,10 @@ public class DataMemory {
 	}
 
 	public void setBit(int address, int bit) {
+		if(address == 0) {
+			address = readByte(SpecialRegister.FSR.getAddress());
+		}
+		
 		int bitmask = 1 << bit;
 
 		if (isMirrored(address)) {
@@ -101,6 +113,10 @@ public class DataMemory {
 	}
 
 	public void clearBit(int address, int bit) {
+		if(address == 0) {
+			address = readByte(SpecialRegister.FSR.getAddress());
+		}
+		
 		int bitmask = 1 << bit;
 		bitmask = bitmask ^ 0b11111111;
 
@@ -114,6 +130,10 @@ public class DataMemory {
 	}
 
 	public int readBit(int address, int bit) {
+		if(address == 0) {
+			address = readByte(SpecialRegister.FSR.getAddress());
+		}
+		
 		int retBit = 0;
 		int bitmask = 1 << bit;
 

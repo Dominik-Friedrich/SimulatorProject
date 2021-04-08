@@ -1,5 +1,7 @@
 package Memory;
 
+import java.util.ArrayList;
+
 public class ProgrammMemory {
 	private int[] programmMemory = new int[1024];
 	
@@ -19,5 +21,11 @@ public class ProgrammMemory {
 	
 	public void newProgramm(int[] programmMemory) {
 		this.programmMemory = programmMemory;
+	}
+
+	public void newProgramm(ArrayList<Integer> instructions) {
+		for (int i = 0; i < instructions.size(); i++) {
+			programmMemory[i] = instructions.get(i);
+		}	
 	}
 }
