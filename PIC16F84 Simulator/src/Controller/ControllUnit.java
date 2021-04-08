@@ -412,8 +412,32 @@ public class ControllUnit {
 	}
 
 	private void rrf(int fileAdress, int destination) {
-		// TODO Auto-generated method stub
-
+		// TODO test
+		int tempVal = 0;
+		int tempBit = 0;
+		tempVal = dataStorage.readByte(fileAdress);
+		
+		// save carry
+		tempBit = dataStorage.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		
+		// move the least significant bit into carry
+		if ((tempVal & 0b1) > 0) {
+			dataStorage.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		} else {
+			dataStorage.clearBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		}
+		
+		// add tempBit as the most significant bit (8th bit in our case)
+		tempVal = tempVal >> 1;
+		tempBit = tempBit << 7;
+		
+		tempVal = tempVal | tempBit;
+		
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+		}
 	}
 
 	private void rlf(int fileAdress, int destination) {

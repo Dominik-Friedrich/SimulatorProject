@@ -119,6 +119,18 @@ class ControllUnitTest {
 	}
 
 	// TODO MOVWF, NOP, RLF, RRF
+	
+	@Test
+	void testRRF() {
+		controlTestee.execute(0b1100_1001_0000);
+		assertEquals(4, memoryTestee.readByte(testRegister));
+		assertEquals(0, memoryTestee.readBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit()));
+		
+		memoryTestee.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
+		
+		
+
+	}
 
 	@Test
 	void testSUBWF() {
