@@ -20,12 +20,16 @@ import javax.swing.border.TitledBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.Color;
 import javax.swing.JLabel;
+import javax.swing.JList;
+
 import java.awt.GridLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.awt.event.ActionEvent;
 import net.miginfocom.swing.MigLayout;
@@ -37,10 +41,15 @@ import javax.swing.JTextPane;
 import javax.swing.JTable;
 import javax.swing.JScrollBar;
 import javax.swing.table.DefaultTableModel;
+
+import org.junit.jupiter.params.provider.EmptySource;
+
+import Read.ReadLST;
+
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
-public class Window extends JFrame {
+public class Window extends JFrame implements ActionListener {
 	private JTable table;
 
 	/**
@@ -84,6 +93,34 @@ public class Window extends JFrame {
 		JButton file = new JButton("Datei");  //Action Listener Notwendig um File Explorer zu öffnen
 		menuBar.add(file);
 
+		file.addActionListener(new ActionListener(){  
+			public void actionPerformed(ActionEvent e){  
+
+				int response;
+				File fileOne;
+				JFileChooser chooser = new JFileChooser("");
+				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+				response = chooser.showOpenDialog(null);
+
+                if(response == JFileChooser.APPROVE_OPTION){
+				    fileOne = chooser.getSelectedFile();
+					String path = fileOne.getAbsolutePath();
+					ReadLST list = new ReadLST(path);
+					try {
+						list.initializeScanner();
+					} catch (FileNotFoundException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					ArrayList<String> liste = new ArrayList<String>();
+					liste = list.readFile();
+
+				}			
+			}  
+			});  
+
+
+		
 		JPanel specialFunctionRegisterAndW = new JPanel();
 		specialFunctionRegisterAndW
 				.setBorder(new TitledBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(192, 192, 192)), "SFR + W",
@@ -523,21 +560,4 @@ public class Window extends JFrame {
 		controls.add(btnStop);
 	}
 
-
-	public void loadLST(ActionEvent e, JPanel programmSourceCode) { //File Explorer
-
-		File failOne;
-		Scanner failOneScan;
-		int response;
-		JFileChooser chooser = new JFileChooser("");
-
-		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		response = chooser.showOpenDialog(null);
-
-		if(response == JFileChooser.APPROVE_OPTION){
-
-			failOne = chooser.getSelectedFile();
-			                                       //Ausgewählte Datei wird in Fenster geladen
-		}
-	}
 }
