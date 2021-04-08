@@ -10,7 +10,7 @@ public class tst {
         list.initializeScanner();
         ArrayList<String> liste = new ArrayList<String>();
         liste = list.readFile();
-        System.out.println(liste.get(10));
+        System.out.println(liste);
     
     }
     

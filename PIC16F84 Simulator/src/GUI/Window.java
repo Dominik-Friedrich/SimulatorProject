@@ -29,6 +29,7 @@ import javax.swing.JFileChooser;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.awt.event.ActionEvent;
@@ -535,32 +536,44 @@ public class Window extends JFrame implements ActionListener {
 
 		file.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
+                
+			    ArrayList<String> liste = new ArrayList<String>();
 				int response;
 				File fileOne;
+				Scanner scan;
 				JFileChooser chooser = new JFileChooser("");
 				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				response = chooser.showOpenDialog(null);
 
 				if (response == JFileChooser.APPROVE_OPTION) {
 					fileOne = chooser.getSelectedFile();
-					String path = fileOne.getAbsolutePath();
-					ReadLST list = new ReadLST(path);
 					try {
-						list.initializeScanner();
+						scan = new Scanner(fileOne);
+						while (scan.hasNextLine()) {
+							String line = scan.nextLine();
+                            liste.add(line);
+						}
+
 					} catch (FileNotFoundException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					ArrayList<String> liste = new ArrayList<String>();
-					liste = list.readFile();
-					for (int i = 0; i < liste.size(); i++) {
-						JLabel label = new JLabel(liste.get(i));
-						programmSourceCode.add(label);
+
+					String listeZwei[] = new String[liste.size()];
+					for(int i=0; i<liste.size(); i++){
+						listeZwei[i] = liste.get(i);
 					}
+
+					JList speicher = new JList(listeZwei);
+					programmSourceCode.add(speicher);
+					programmSourceCode.setVisible(true);
+				    
 				}
+
+				
 			}
 		});
+
 	}
 
 }
