@@ -87,7 +87,7 @@ public class ControllUnit extends Thread {
 				dataStorage.setBit(SpecialRegister.T0IF.getAddress(), SpecialRegister.T0IF.getAddress());
 			}
 
-			// updateGUI
+			//gui.updateGUI(dataStorage);
 		}
 	}
 

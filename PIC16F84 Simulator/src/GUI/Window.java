@@ -44,7 +44,6 @@ import javax.swing.JTable;
 import javax.swing.JScrollBar;
 import javax.swing.table.DefaultTableModel;
 
-import org.graalvm.compiler.lir.CompositeValue.Component;
 import org.junit.jupiter.params.provider.EmptySource;
 
 import Read.ReadLST;
@@ -54,7 +53,10 @@ import javax.swing.ScrollPaneConstants;
 
 public class Window extends JFrame implements ActionListener {
 	private JTable table;
-
+	private JPanel programmSourceCode;
+	private JScrollPane scrollPane_1;
+	private JList<Object> speicher;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -414,16 +416,16 @@ public class Window extends JFrame implements ActionListener {
 		portBRegister.setBounds(779, 116, 470, 77);
 		getContentPane().add(portBRegister);
 
-		JPanel programmSourceCode = new JPanel();
+		programmSourceCode = new JPanel();
 		programmSourceCode.setToolTipText("");
 		programmSourceCode.setBorder(new TitledBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(192, 192, 192)),
 				"Programm (LST-Datei)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		programmSourceCode.setBounds(10, 204, 759, 438);
 		getContentPane().add(programmSourceCode);
-		programmSourceCode.setLayout(new BorderLayout(0, 0));  
-		JTextPane textPane = new JTextPane();
-		programmSourceCode.add(textPane, BorderLayout.CENTER);
+		programmSourceCode.setLayout(new BorderLayout(0, 0));
 		
+		scrollPane_1 = new JScrollPane();
+		programmSourceCode.add(scrollPane_1, BorderLayout.CENTER);
 
 		JPanel fileregister = new JPanel();
 		fileregister.setToolTipText("");
@@ -502,8 +504,6 @@ public class Window extends JFrame implements ActionListener {
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		fileregister.add(scrollPane);
 
-		
-
 		JPanel timing = new JPanel();
 		timing.setLayout(null);
 		timing.setToolTipText("");
@@ -538,71 +538,55 @@ public class Window extends JFrame implements ActionListener {
 
 		file.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
                 
-			    ArrayList<String> liste = new ArrayList<String>();
-				int response;
-				File fileOne;
-				Scanner scan;
-				JFileChooser chooser = new JFileChooser("");
-				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-				response = chooser.showOpenDialog(null);
+			    inputfile();
 
-				if (response == JFileChooser.APPROVE_OPTION) 
-				{
-				
-					fileOne = chooser.getSelectedFile();
-					try 
-					{
-						scan = new Scanner(fileOne, "ISO-8859-1");						
-						while (scan.hasNextLine()) 
-						{
-							String line = scan.nextLine();
-                            String lineTwo = line;
-							liste.add(lineTwo);
-							
-							
-						}
-						   
-                           String storageSplit[] = new String[liste.size()];
-
-						   for(int i=0; i<storageSplit.length; i++)
-						   {
-							   storageSplit[i] = liste.get(i);
-							   
-						   }
-						
-						   if(storageSplit != null) //Sanity Check
-						   {   
-						      JList storage = new JList(storageSplit);
-							  programmSourceCode.add(storage);
-							  JScrollPane scrollPaneTwo = new JScrollPane(storage);
-                              scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-                              scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		                      programmSourceCode.add(scrollPaneTwo);	
-							  programmSourceCode.revalidate();
-							  
-							 
-						   }
-    
-					} 
-					catch (FileNotFoundException e1) 
-					{
-						// TODO Auto-generated catch block
-						e1.printStackTrace();	
-						System.out.println("File not found!");
-					}
-				    
-					   
-					  
-					
-				}
 				
 			}
 		});
 
+	}
+	
+	public void inputfile() {
+		ArrayList<String> liste = new ArrayList<String>();
+		int response;
+		File fileOne;
+		Scanner scan;
+		JFileChooser chooser = new JFileChooser("");
+		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		response = chooser.showOpenDialog(null);
 
+		if (response == JFileChooser.APPROVE_OPTION) {
+			fileOne = chooser.getSelectedFile();
+			try {
+				scan = new Scanner(fileOne);
+				while (scan.hasNextLine()) {
+					String line = scan.nextLine();
+                    liste.add(line);
+				}
+
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			String listeZwei[] = new String[liste.size()];
+			for(int i=0; i<liste.size(); i++){
+				listeZwei[i] = liste.get(i);
+			}
+
+			speicher = new JList(listeZwei);
+			programmSourceCode.add(speicher);
+			programmSourceCode.setVisible(true);
+			scrollPane_1.setViewportView(speicher);
+		    
+		}
 	}
 
-	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
