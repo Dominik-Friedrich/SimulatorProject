@@ -7,48 +7,48 @@ import Memory.ProgrammMemory;
 import Memory.SpecialRegister;
 import Memory.StackMemory;
 
-public class ControllUnit {
+public class ControllUnit extends Thread {
 	private StackMemory stack = new StackMemory();
 	private DataMemory dataStorage = new DataMemory();
 	// private Parser lstParser = new Parser();
 	private ProgrammMemory programmStorage = new ProgrammMemory();
 
 	private int programmCounter = 0;
-	
+
 	private int runtimeCount = 0;
-	private int currFrequency = 0; // in kHz
+	private int currFrequency = 1; // in kHz
 	private boolean running = false;
 
 	public ControllUnit() {
-		run();
+	}
+	
+	public ControllUnit(DataMemory dataStorage, StackMemory stack) {
+		this.dataStorage = dataStorage;
+		this.stack = stack;
+	}
+	
+	public ControllUnit(DataMemory dataStorage) {
+		this.dataStorage = dataStorage;
 	}
 
+	// TODO implement reset here
 	public int getRuntime() {
 		int runtime = 0;
-		
+
 		// runtime in ms
-		runtime = runtimeCount * 1/(currFrequency * 1000) * 4;
+		runtime = runtimeCount * 1 / (currFrequency * 1000) * 4;
 		return runtime;
 	}
 
 	// TODO interrupt checks
-	private void run() {
+	public void run() {
 		int lastRunTime = 0;
-		
-		while (running) {
-			lastRunTime = getRuntime();
-			execute(programmStorage.read(programmCounter));
-			incrementPC();
-			// TODO sleep(getRuntime() - lastRunTime);
-			// updateGUI
-		}
-	}
 
-	// Used for testing
-	public void attachNewStorage(DataMemory dataStorage) {
-		if (dataStorage != null) {
-			this.dataStorage = dataStorage;
-		}
+		lastRunTime = getRuntime();
+		execute(programmStorage.read(programmCounter));
+		
+		// TODO sleep(getRuntime() - lastRunTime);
+		// updateGUI
 	}
 
 	public void newProgramm(ArrayList<Integer> instructions) {
@@ -56,18 +56,22 @@ public class ControllUnit {
 		dataStorage.powerOnReset();
 		runtimeCount = 0;
 	}
-	
+
 	private void incrementPC() {
 		programmCounter++;
 		if (programmCounter > 8191) {
 			programmCounter = 0;
 		}
-		
+
 		int PCLATH = programmCounter & 0x1F0;
 		PCLATH = PCLATH >> 8;
-		
+
 		dataStorage.writeByte(SpecialRegister.PCL.getAddress(), programmCounter);
 		dataStorage.writeByte(SpecialRegister.PCLATH0.getAddress(), PCLATH);
+	}
+	
+	public int getProgrammCounter() {
+		return programmCounter;
 	}
 
 	// decoding the OPC and executing it
@@ -81,11 +85,13 @@ public class ControllUnit {
 		// k is usually 8 Bit long
 		// in case of goto and call it is 11 Bits long
 		// so it gets re-masked later in case of a goto or call command
-		int k = operationCode & 0b00000011111111;
+		int k = operationCode & 0b00_0000_1111_1111;
 
 		// top 2 bits to identify operation class
+	
 		switch (operationCode & 0b11000000000000) {
 		case 0:
+			
 			// byte-oriented file register operations
 			// and some literal and control operations
 
@@ -322,6 +328,8 @@ public class ControllUnit {
 		default:
 			throw new IllegalArgumentException("Unexpected OPC: " + operationCode);
 		}
+		
+		incrementPC();
 	}
 
 	private void xorlw(int k) {
@@ -348,12 +356,14 @@ public class ControllUnit {
 	private void _sleep() {
 		// TODO Auto-generated method stub
 
+		// dataStorage.reset();
+
 		runtimeCount++;
 	}
 
 	private void _return() {
 		programmCounter = stack.returnHappened();
-		
+
 		runtimeCount++;
 		runtimeCount++;
 	}
@@ -362,7 +372,7 @@ public class ControllUnit {
 		// TODO test
 		dataStorage.writeW(k);
 		programmCounter = stack.returnHappened();
-		
+
 		runtimeCount++;
 		runtimeCount++;
 	}
@@ -395,12 +405,12 @@ public class ControllUnit {
 
 	private void goto_(int k) {
 		// TODO test
-		
+
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(SpecialRegister.PCLATH0.getAddress());
 		tempVal = tempVal & 0b0001_1000;
 		tempVal = tempVal << 11;
-			
+
 		// PCL and PCLATH are updated in incrementPC() afterwards
 		programmCounter = k + tempVal;
 
@@ -415,18 +425,16 @@ public class ControllUnit {
 	}
 
 	private void call(int k) {
-		// TODO test
-		// TODO maybe +1 needed
 		stack.callHappened(programmCounter);
 		
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(SpecialRegister.PCLATH0.getAddress());
 		tempVal = tempVal & 0b0001_1000;
 		tempVal = tempVal << 11;
-			
+
 		// PCL and PCLATH are updated in incrementPC() afterwards
-		programmCounter = k + tempVal;
-		
+		programmCounter = k + tempVal - 1;
+
 		runtimeCount++;
 		runtimeCount++;
 	}
@@ -461,7 +469,7 @@ public class ControllUnit {
 			nop();
 			incrementPC();
 		}
-		
+
 		runtimeCount++;
 	}
 
@@ -471,7 +479,7 @@ public class ControllUnit {
 			nop();
 			incrementPC();
 		}
-		
+
 		runtimeCount++;
 	}
 
@@ -526,13 +534,27 @@ public class ControllUnit {
 	}
 
 	private void subwf(int fileAdress, int destination) {
-		int tempVal = 0;
-		tempVal = dataStorage.readW();
+		int originalVal = dataStorage.readW();
+		int tempVal = originalVal;
+		
 		tempVal = ~tempVal;
 		tempVal += 1;
+		
+		// write 2s complement to w so addwf() can work with it
 		dataStorage.writeW(tempVal);
 
 		addwf(fileAdress, destination);
+		
+		
+		// restore original value of w in case the destination was the fileregister
+		if (destination > 0) {
+			dataStorage.writeW(originalVal);
+		}
+		// Special case when subtracting 0
+		if (originalVal == 0) {
+			updateCarryFlag(0xFFF);
+			updateHalfCarryFlag(0xF, 0xF);
+		}
 	}
 
 	private void rrf(int fileAdress, int destination) {
@@ -602,7 +624,7 @@ public class ControllUnit {
 	private void movwf(int fileAdress) {
 		// TODO test
 		dataStorage.writeByte(fileAdress, dataStorage.readW());
-		
+
 		runtimeCount++;
 	}
 
@@ -690,7 +712,7 @@ public class ControllUnit {
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(fileAdress);
 		tempVal = ~tempVal;
-		
+
 		updateZeroFlag(tempVal);
 
 		if (destination == 0) {
@@ -771,7 +793,7 @@ public class ControllUnit {
 
 	public void updateZeroFlag(int value) {
 		value = value & 0xFF;
-		
+
 		if (value == 0) {
 			dataStorage.setBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit());
 		} else {

@@ -9,10 +9,12 @@ import org.junit.jupiter.api.Test;
 import Controller.ControllUnit;
 import Memory.DataMemory;
 import Memory.SpecialRegister;
+import Memory.StackMemory;
 
 class ControllUnitTest {
 	private DataMemory memoryTestee;
 	private ControllUnit controlTestee;
+	private StackMemory stackTestee;
 	private int testRegister = 0b001_0000;
 	private int valR = 8;
 	private int valW = 3;
@@ -20,8 +22,8 @@ class ControllUnitTest {
 	@BeforeEach
 	public void setUp() {
 		memoryTestee = new DataMemory();
-		controlTestee = new ControllUnit();
-		controlTestee.attachNewStorage(memoryTestee);
+		stackTestee = new StackMemory();
+		controlTestee = new ControllUnit(memoryTestee, stackTestee);
 
 		memoryTestee.writeByte(testRegister, valR);
 		memoryTestee.writeW(valW);
@@ -229,7 +231,19 @@ class ControllUnitTest {
 		assertEquals(valW & valR, memoryTestee.readW());
 	}
 
-	// TODO CALL, CLRWDT, GOTO
+	@Test
+	void testCALLandRETURN() {
+		controlTestee.execute(0x2006);
+		assertEquals(0x6, controlTestee.getProgrammCounter()); 
+		controlTestee.execute(0x2020);
+		assertEquals(0x20, controlTestee.getProgrammCounter());
+		
+		controlTestee.execute(0x0008);
+		assertEquals(0x7, controlTestee.getProgrammCounter());
+		controlTestee.execute(0x0008);
+		assertEquals(0x1, controlTestee.getProgrammCounter());
+	}
+	// TODO CLRWDT, GOTO
 
 	@Test
 	void testIORLW() {
