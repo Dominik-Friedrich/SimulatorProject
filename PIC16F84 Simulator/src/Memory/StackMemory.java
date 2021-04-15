@@ -5,10 +5,13 @@ public class StackMemory {
 	private int stackCounter = 0;
 	
 	public StackMemory() {
-		// TODO maybe mask adress, stack is 13bits?
 	}
 	
-	public void callHappened (int returnAddress) {
+	public int get(int i) {
+		return stack[i];
+	}
+	
+	public void push (int returnAddress) {
 		stack[stackCounter] = returnAddress;
 		stackCounter++;
 		
@@ -18,7 +21,7 @@ public class StackMemory {
 		}
 	}
 	
-	public int returnHappened () {
+	public int pop () {
 		stackCounter--;
 		
 		// underflow check
@@ -27,5 +30,15 @@ public class StackMemory {
 		}
 		
 		return stack[stackCounter];
+	}
+	
+	public String toString() {
+		String tempString = "";
+		
+		for (int i = 0; i < stack.length; i++) {
+			tempString += "["+stack[i]+"] ";
+		}
+		
+		return tempString;
 	}
 }
