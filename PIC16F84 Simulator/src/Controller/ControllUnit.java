@@ -362,7 +362,7 @@ public class ControllUnit extends Thread {
 	}
 
 	private void _return() {
-		programmCounter = stack.returnHappened();
+		programmCounter = stack.pop();
 
 		runtimeCount++;
 		runtimeCount++;
@@ -371,7 +371,7 @@ public class ControllUnit extends Thread {
 	private void retlw(int k) {
 		// TODO test
 		dataStorage.writeW(k);
-		programmCounter = stack.returnHappened();
+		programmCounter = stack.pop();
 
 		runtimeCount++;
 		runtimeCount++;
@@ -379,7 +379,7 @@ public class ControllUnit extends Thread {
 
 	private void retfie() {
 		// TODO test
-		programmCounter = stack.returnHappened();
+		programmCounter = stack.pop();
 		dataStorage.setBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit());
 
 		runtimeCount++;
@@ -425,7 +425,7 @@ public class ControllUnit extends Thread {
 	}
 
 	private void call(int k) {
-		stack.callHappened(programmCounter);
+		stack.push(programmCounter);
 		
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(SpecialRegister.PCLATH0.getAddress());
