@@ -420,10 +420,10 @@ public class Window extends JFrame implements ActionListener {
 				"Programm (LST-Datei)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		programmSourceCode.setBounds(10, 204, 759, 438);
 		getContentPane().add(programmSourceCode);
-		programmSourceCode.setLayout(new BorderLayout(0, 0));
-
+		programmSourceCode.setLayout(new BorderLayout(0, 0));  
 		JTextPane textPane = new JTextPane();
 		programmSourceCode.add(textPane, BorderLayout.CENTER);
+		
 
 		JPanel fileregister = new JPanel();
 		fileregister.setToolTipText("");
@@ -502,6 +502,8 @@ public class Window extends JFrame implements ActionListener {
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		fileregister.add(scrollPane);
 
+		
+
 		JPanel timing = new JPanel();
 		timing.setLayout(null);
 		timing.setToolTipText("");
@@ -536,6 +538,7 @@ public class Window extends JFrame implements ActionListener {
 
 		file.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+
                 
 			    ArrayList<String> liste = new ArrayList<String>();
 				int response;
@@ -545,35 +548,61 @@ public class Window extends JFrame implements ActionListener {
 				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				response = chooser.showOpenDialog(null);
 
-				if (response == JFileChooser.APPROVE_OPTION) {
+				if (response == JFileChooser.APPROVE_OPTION) 
+				{
+				
 					fileOne = chooser.getSelectedFile();
-					try {
-						scan = new Scanner(fileOne);
-						while (scan.hasNextLine()) {
+					try 
+					{
+						scan = new Scanner(fileOne, "ISO-8859-1");						
+						while (scan.hasNextLine()) 
+						{
 							String line = scan.nextLine();
-                            liste.add(line);
+                            String lineTwo = line;
+							liste.add(lineTwo);
+							
+							
 						}
+						   
+                           String storageSplit[] = new String[liste.size()];
 
-					} catch (FileNotFoundException e1) {
+						   for(int i=0; i<storageSplit.length; i++)
+						   {
+							   storageSplit[i] = liste.get(i);
+							   
+						   }
+						
+						   if(storageSplit != null) //Sanity Check
+						   {   
+						      JList storage = new JList(storageSplit);
+							  programmSourceCode.add(storage);
+							  JScrollPane scrollPaneTwo = new JScrollPane(storage);
+                              scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                              scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		                      programmSourceCode.add(scrollPaneTwo);	
+							  programmSourceCode.revalidate();
+							  
+							 
+						   }
+    
+					} 
+					catch (FileNotFoundException e1) 
+					{
 						// TODO Auto-generated catch block
-						e1.printStackTrace();
+						e1.printStackTrace();	
+						System.out.println("File not found!");
 					}
-
-					String listeZwei[] = new String[liste.size()];
-					for(int i=0; i<liste.size(); i++){
-						listeZwei[i] = liste.get(i);
-					}
-
-					JList speicher = new JList(listeZwei);
-					programmSourceCode.add(speicher);
-					programmSourceCode.setVisible(true);
 				    
+					   
+					  
+					
 				}
-
 				
 			}
 		});
 
+
 	}
 
+	
 }
