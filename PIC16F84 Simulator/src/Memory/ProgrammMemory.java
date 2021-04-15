@@ -5,8 +5,7 @@ import java.util.ArrayList;
 public class ProgrammMemory {
 	private int[] programmMemory = new int[1024];
 	
-	public ProgrammMemory() {
-		// TODO idky	
+	public ProgrammMemory() {	
 	}
 	
 	public int read(int address) {

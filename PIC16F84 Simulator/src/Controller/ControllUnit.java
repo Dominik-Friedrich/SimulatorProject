@@ -2,36 +2,53 @@ package Controller;
 
 import java.util.ArrayList;
 
+import GUI.Window;
 import Memory.DataMemory;
 import Memory.ProgrammMemory;
 import Memory.SpecialRegister;
 import Memory.StackMemory;
+import Read.ReadLST;
 
 public class ControllUnit extends Thread {
-	private StackMemory stack = new StackMemory();
-	private DataMemory dataStorage = new DataMemory();
-	// private Parser lstParser = new Parser();
-	private ProgrammMemory programmStorage = new ProgrammMemory();
+	private Window gui;
+	private ReadLST lstParser;
+	private ProgrammMemory programmStorage;
+	private StackMemory stack;
+	private DataMemory dataStorage;
+
+	private PICTimer timer;
 
 	private int programmCounter = 0;
 
+	// runtimeCount = Timer basically
 	private int runtimeCount = 0;
 	private int currFrequency = 1; // in kHz
-	private boolean running = false;
 
 	public ControllUnit() {
-	}
-	
-	public ControllUnit(DataMemory dataStorage, StackMemory stack) {
-		this.dataStorage = dataStorage;
-		this.stack = stack;
-	}
-	
-	public ControllUnit(DataMemory dataStorage) {
-		this.dataStorage = dataStorage;
+
 	}
 
-	// TODO implement reset here
+	// THIS SHOULD BE THE FINAL CONSTRUCTOR
+	// TODO remove others in finished program
+	// TODO might not need readLST here
+	public ControllUnit(Window gui, ReadLST lstParser) {
+		this.gui = gui;
+		this.lstParser = lstParser;
+		this.stack = new StackMemory();
+		this.dataStorage = new DataMemory(this);
+		this.programmStorage = new ProgrammMemory();
+		this.timer = new PICTimer();
+	}
+
+	public DataMemory getData() {
+		return dataStorage;
+	}
+	
+	public StackMemory getStack() {
+		return stack;
+	}
+
+	// GUI uses this
 	public int getRuntime() {
 		int runtime = 0;
 
@@ -40,38 +57,106 @@ public class ControllUnit extends Thread {
 		return runtime;
 	}
 
-	// TODO interrupt checks
 	public void run() {
-		int lastRunTime = 0;
+		if (programmStorage != null) {
 
-		lastRunTime = getRuntime();
-		execute(programmStorage.read(programmCounter));
-		
-		// TODO sleep(getRuntime() - lastRunTime);
-		// updateGUI
+			if (interruptHappened()) {
+				dataStorage.clearBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit());
+				// CALL to address 0x04
+				execute(0x2004);
+			}
+			execute(programmStorage.read(programmCounter));
+
+			// Timer
+			int tempTimer = 0;
+			if (dataStorage.readBit(SpecialRegister.T0CS.getAddress(), SpecialRegister.T0CS.getBit()) == 1) {
+				// update on RA4
+				tempTimer = timer.externalTrigger(
+						dataStorage.readBit(SpecialRegister.RA4.getAddress(), SpecialRegister.RA4.getBit()),
+						dataStorage.readBit(SpecialRegister.INTEDG.getAddress(), SpecialRegister.INTEDG.getBit()));	
+			} else {
+				// Update on cycle clock
+				tempTimer = timer.updateTimer(runtimeCount);
+			}
+			// update in memory
+			dataStorage.writeByte(SpecialRegister.TMR0.getAddress(), tempTimer);
+			
+			// check for overflow
+			if (tempTimer > 0xFF) {
+				// timer overflow, set T0IF
+				dataStorage.setBit(SpecialRegister.T0IF.getAddress(), SpecialRegister.T0IF.getAddress());
+			}
+
+			// updateGUI
+		}
 	}
 
 	public void newProgramm(ArrayList<Integer> instructions) {
 		programmStorage.newProgramm(instructions);
 		dataStorage.powerOnReset();
 		runtimeCount = 0;
+		programmCounter = 0;
 	}
 
 	private void incrementPC() {
-		programmCounter++;
-		if (programmCounter > 8191) {
-			programmCounter = 0;
+		// TODO see if it works correctly
+		
+		if ((programmCounter & 0xFF) == 255) {
+			programmCounter -= 0xFF;
+		} else {
+			programmCounter++;
 		}
 
-		int PCLATH = programmCounter & 0x1F0;
-		PCLATH = PCLATH >> 8;
-
-		dataStorage.writeByte(SpecialRegister.PCL.getAddress(), programmCounter);
-		dataStorage.writeByte(SpecialRegister.PCLATH0.getAddress(), PCLATH);
+		dataStorage.writePCL(programmCounter);
 	}
-	
+
+	public void changePC() {
+		// PC is incremented after
+		programmCounter = dataStorage.readByte(SpecialRegister.PCL.getAddress());
+		int tempPCLATH = dataStorage.readByte(SpecialRegister.PCL.getAddress()) & 0b11111;
+		tempPCLATH = tempPCLATH << 8;
+		
+		programmCounter += tempPCLATH;
+	}
+
 	public int getProgrammCounter() {
 		return programmCounter;
+	}
+
+	public void incRuntimeCount() {
+		runtimeCount++;
+	}
+
+	private boolean interruptHappened() {
+		boolean bRet = false;
+
+		// global interrupt enable
+		if (dataStorage.readBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit()) == 1) {
+			// TODO is EEIE needed?
+
+			// Timer interrupt
+			if (dataStorage.readBit(SpecialRegister.T0IE.getAddress(), SpecialRegister.T0IE.getBit()) == 1) {
+				if (dataStorage.readBit(SpecialRegister.T0IF.getAddress(), SpecialRegister.T0IF.getBit()) == 1) {
+					bRet = true;
+				}
+			}
+
+			// RB0/INT interrupt
+			if (dataStorage.readBit(SpecialRegister.INTE.getAddress(), SpecialRegister.INTE.getBit()) == 1) {
+				if (dataStorage.readBit(SpecialRegister.INTF.getAddress(), SpecialRegister.INTF.getBit()) == 1) {
+					bRet = true;
+				}
+			}
+
+			// RB7:RB4 interrupt
+			if (dataStorage.readBit(SpecialRegister.RBIE.getAddress(), SpecialRegister.RBIE.getBit()) == 1) {
+				if (dataStorage.readBit(SpecialRegister.RBIF.getAddress(), SpecialRegister.RBIF.getBit()) == 1) {
+					bRet = true;
+				}
+			}
+		}
+
+		return bRet;
 	}
 
 	// decoding the OPC and executing it
@@ -88,10 +173,10 @@ public class ControllUnit extends Thread {
 		int k = operationCode & 0b00_0000_1111_1111;
 
 		// top 2 bits to identify operation class
-	
+
 		switch (operationCode & 0b11000000000000) {
 		case 0:
-			
+
 			// byte-oriented file register operations
 			// and some literal and control operations
 
@@ -328,7 +413,7 @@ public class ControllUnit extends Thread {
 		default:
 			throw new IllegalArgumentException("Unexpected OPC: " + operationCode);
 		}
-		
+
 		incrementPC();
 	}
 
@@ -426,15 +511,15 @@ public class ControllUnit extends Thread {
 
 	private void call(int k) {
 		stack.push(programmCounter);
-		
+
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(SpecialRegister.PCLATH0.getAddress());
 		tempVal = tempVal & 0b0001_1000;
-		tempVal = tempVal << 11;
+		tempVal = tempVal << 8;
 
-		// PCL and PCLATH are updated in incrementPC() afterwards
+		// PCL is updated in incrementPC afterwards
 		programmCounter = k + tempVal - 1;
-
+		
 		runtimeCount++;
 		runtimeCount++;
 	}
@@ -536,16 +621,15 @@ public class ControllUnit extends Thread {
 	private void subwf(int fileAdress, int destination) {
 		int originalVal = dataStorage.readW();
 		int tempVal = originalVal;
-		
+
 		tempVal = ~tempVal;
 		tempVal += 1;
-		
+
 		// write 2s complement to w so addwf() can work with it
 		dataStorage.writeW(tempVal);
 
 		addwf(fileAdress, destination);
-		
-		
+
 		// restore original value of w in case the destination was the fileregister
 		if (destination > 0) {
 			dataStorage.writeW(originalVal);

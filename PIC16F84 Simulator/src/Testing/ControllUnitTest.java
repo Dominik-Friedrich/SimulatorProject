@@ -21,9 +21,9 @@ class ControllUnitTest {
 
 	@BeforeEach
 	public void setUp() {
-		memoryTestee = new DataMemory();
-		stackTestee = new StackMemory();
-		controlTestee = new ControllUnit(memoryTestee, stackTestee);
+		controlTestee = new ControllUnit(null, null);
+		memoryTestee = controlTestee.getData();
+		stackTestee = controlTestee.getStack();
 
 		memoryTestee.writeByte(testRegister, valR);
 		memoryTestee.writeW(valW);

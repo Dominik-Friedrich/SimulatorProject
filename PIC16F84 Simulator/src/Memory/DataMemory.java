@@ -1,9 +1,19 @@
 package Memory;
 
+import Controller.ControllUnit;
+
 public class DataMemory {
+	private ControllUnit controller;
+	
 	private int[][] bank = { new int[128], new int[128] };
 	private int wRegister = 0;
 
+	// TODO remove other constructors
+	public DataMemory(ControllUnit controller) {
+		this.controller = controller;
+	}
+	
+	// USED ONLY FOR TESTING
 	public DataMemory() {
 	}
 
@@ -48,6 +58,12 @@ public class DataMemory {
 		if(address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
+		if (address == SpecialRegister.TMR0.getAddress()) {
+			controller.incRuntimeCount();
+		}
+		if (address == SpecialRegister.PCL.getAddress()) {
+			controller.changePC();
+		}
 		
 		value = value & 0b11111111;
 
@@ -73,6 +89,11 @@ public class DataMemory {
 		writeByte(address, 0);
 	}
 
+	public void writePCL(int value) {
+		bank[0][SpecialRegister.PCL.getAddress()] = value & 0xFF;  
+		bank[1][SpecialRegister.PCL.getAddress()] = value & 0xFF;
+	}
+	
 	public int readByte(int address) {
 		if(address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
@@ -94,6 +115,12 @@ public class DataMemory {
 	public void setBit(int address, int bit) {
 		if(address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
+		}
+		if (address == SpecialRegister.TMR0.getAddress()) {
+			controller.incRuntimeCount();
+		}
+		if (address == SpecialRegister.PCL.getAddress()) {
+			controller.changePC();
 		}
 		
 		int bitmask = 1 << bit;
