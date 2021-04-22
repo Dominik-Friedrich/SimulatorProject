@@ -20,7 +20,7 @@ public class LSTTest {
 
 	@BeforeEach
 	public void setUp() {
-		controlTestee = new ControllUnit(null, null);
+		controlTestee = new ControllUnit(null);
 		memoryTestee = controlTestee.getData();
 		stackTestee = controlTestee.getStack();
 

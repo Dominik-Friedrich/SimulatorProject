@@ -9,7 +9,7 @@ public class tst {
         ReadLST list = new ReadLST("C:/Users/User/Downloads/TPicSim_20200520_1/TPicSim1.LST");
         list.initializeScanner();
         ArrayList<String> liste = new ArrayList<String>();
-        liste = list.readFile();
+        //liste = list.readFile();
         System.out.println(liste);
     
     }
