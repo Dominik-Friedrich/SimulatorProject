@@ -1,16 +1,19 @@
 package Memory;
 
 import Controller.ControllUnit;
+import Controller.PICTimer;
 
 public class DataMemory {
 	private ControllUnit controller;
+	private PICTimer timer;
 
 	private int[][] bank = { new int[128], new int[128] };
 	private int wRegister = 0;
 
 	// TODO remove other constructors
-	public DataMemory(ControllUnit controller) {
+	public DataMemory(ControllUnit controller, PICTimer timer) {
 		this.controller = controller;
+		this.timer = timer;
 	}
 
 	// USED ONLY FOR TESTING
@@ -27,7 +30,7 @@ public class DataMemory {
 		writeByte(SpecialRegister.STATUS.getAddress(), 24);
 		writeByte(SpecialRegister.PCLATH0.getAddress(), 0);
 		writeByte(SpecialRegister.INTCON.getAddress(), 0);
-		
+
 		// Bank 1
 		setBit(SpecialRegister.RP0.getAddress(), SpecialRegister.RP0.getBit());
 
@@ -63,17 +66,24 @@ public class DataMemory {
 	}
 
 	public void writeByte(int address, int value) {
+		value = value & 0xFF;
+
 		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
 		if (address == SpecialRegister.TMR0.getAddress()) {
-			controller.incRuntimeCount();
+			if (readBit(SpecialRegister.RP0.getAddress(), SpecialRegister.RP0.getBit()) == 0) {
+				// update on TMR0
+				controller.incRuntimeCount();
+				timer.registerUpdate(value);
+			} else {
+				// update on OPTION
+				timer.setPreScaler(value);
+			}
 		}
 		if (address == SpecialRegister.PCL.getAddress()) {
 			controller.changePC();
 		}
-
-		value = value & 0b11111111;
 
 		if (isMirrored(address)) {
 			bank[0][address] = value;
@@ -90,10 +100,6 @@ public class DataMemory {
 	}
 
 	public void clearByte(int address) {
-		if (address == 0) {
-			address = readByte(SpecialRegister.FSR.getAddress());
-		}
-
 		writeByte(address, 0);
 	}
 
@@ -121,17 +127,19 @@ public class DataMemory {
 	}
 
 	public void setBit(int address, int bit) {
+		int bitmask = 1 << bit;
+
 		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
 		if (address == SpecialRegister.TMR0.getAddress()) {
 			controller.incRuntimeCount();
+			timer.registerUpdate(bank[0][address] | bitmask);
+			timer.setPreScaler(bank[1][address] | bitmask);
 		}
 		if (address == SpecialRegister.PCL.getAddress()) {
 			controller.changePC();
 		}
-
-		int bitmask = 1 << bit;
 
 		if (isMirrored(address)) {
 			bank[0][address] = bank[0][address] | bitmask;
@@ -218,5 +226,13 @@ public class DataMemory {
 
 	public void clearW() {
 		writeW(0);
+	}
+	
+	public void setTMR0(int value) {
+		bank[0][SpecialRegister.TMR0.getAddress()] = (value & 0xFF);
+	}
+	
+	public int getT0CS() {
+		return (bank[1][SpecialRegister.T0CS.getAddress()] & 0b10000);
 	}
 }

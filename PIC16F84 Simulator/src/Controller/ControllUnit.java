@@ -9,39 +9,37 @@ import Memory.SpecialRegister;
 import Memory.StackMemory;
 import Read.ReadLST;
 
-public class ControllUnit extends Thread {
+public class ControllUnit {
 	private Window gui;
 	private ProgrammMemory programmStorage;
 	private StackMemory stack;
 	private DataMemory dataStorage;
-
 	private PICTimer timer;
 
 	private int programmCounter = 0;
 
-	// runtimeCount = Timer basically
+	// runtimeCount
+	private int lastRuntimeCount = 0;
 	private int runtimeCount = 0;
 	private int currFrequency = 1; // in kHz
 
 	public ControllUnit() {
-
 	}
 
 	// THIS SHOULD BE THE FINAL CONSTRUCTOR
 	// TODO remove others in finished program
-	// TODO might not need readLST here
 	public ControllUnit(Window gui) {
 		this.gui = gui;
 		this.stack = new StackMemory();
-		this.dataStorage = new DataMemory(this);
-		this.programmStorage = new ProgrammMemory();
 		this.timer = new PICTimer();
+		this.dataStorage = new DataMemory(this, timer);
+		this.programmStorage = new ProgrammMemory();
 	}
 
 	public DataMemory getData() {
 		return dataStorage;
 	}
-	
+
 	public StackMemory getStack() {
 		return stack;
 	}
@@ -57,7 +55,8 @@ public class ControllUnit extends Thread {
 
 	public void run() {
 		if (programmStorage != null) {
-
+			lastRuntimeCount = runtimeCount;
+			
 			if (interruptHappened()) {
 				dataStorage.clearBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit());
 				// CALL to address 0x04
@@ -66,23 +65,25 @@ public class ControllUnit extends Thread {
 			execute(programmStorage.read(programmCounter));
 
 			// Timer
-			int tempTimer = 0;
-			if (dataStorage.readBit(SpecialRegister.T0CS.getAddress(), SpecialRegister.T0CS.getBit()) == 1) {
+			if (dataStorage.getT0CS() > 0) {
 				// update on RA4
-				tempTimer = timer.externalTrigger(
+				timer.externalTrigger(
 						dataStorage.readBit(SpecialRegister.RA4.getAddress(), SpecialRegister.RA4.getBit()),
-						dataStorage.readBit(SpecialRegister.INTEDG.getAddress(), SpecialRegister.INTEDG.getBit()));	
+						dataStorage.readBit(SpecialRegister.INTEDG.getAddress(), SpecialRegister.INTEDG.getBit()));
 			} else {
 				// Update on cycle clock
-				tempTimer = timer.updateTimer(runtimeCount);
+				// update for how many cycles happened
+				for (int i = 0; i < (runtimeCount - lastRuntimeCount); i++) {
+					dataStorage.setTMR0(timer.incrementTimer());
+				}
 			}
-			// update in memory
-			dataStorage.writeByte(SpecialRegister.TMR0.getAddress(), tempTimer);
-			
+
 			// check for overflow
-			if (tempTimer > 0xFF) {
+			if (timer.overflow()) {
 				// timer overflow, set T0IF
 				dataStorage.setBit(SpecialRegister.T0IF.getAddress(), SpecialRegister.T0IF.getAddress());
+				updateZeroFlag(0);
+				timer.clearOverflow();
 			}
 
 			gui.updateGui(dataStorage);
@@ -96,11 +97,13 @@ public class ControllUnit extends Thread {
 		programmCounter = 0;
 		gui.updateGui(dataStorage);
 	}
+	
+	public void timerUpdate(int newTimerValue) {
+		timer.registerUpdate(newTimerValue);
+	}
 
 	private void incrementPC() {
-		// TODO see if it works correctly
-		
-		if ((programmCounter & 0xFF) == 255) {
+		if ((programmCounter & 0xFF) == 255 && programmCounter > 0) {
 			programmCounter -= 0xFF;
 		} else {
 			programmCounter++;
@@ -114,7 +117,7 @@ public class ControllUnit extends Thread {
 		programmCounter = dataStorage.readByte(SpecialRegister.PCL.getAddress());
 		int tempPCLATH = dataStorage.readByte(SpecialRegister.PCL.getAddress()) & 0b11111;
 		tempPCLATH = tempPCLATH << 8;
-		
+
 		programmCounter += tempPCLATH;
 	}
 
@@ -488,15 +491,17 @@ public class ControllUnit extends Thread {
 	}
 
 	private void goto_(int k) {
-		// TODO test
-
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(SpecialRegister.PCLATH0.getAddress());
 		tempVal = tempVal & 0b0001_1000;
-		tempVal = tempVal << 11;
+		tempVal = tempVal << 8;
 
 		// PCL and PCLATH are updated in incrementPC() afterwards
-		programmCounter = k + tempVal;
+		programmCounter = k + tempVal - 1;
+
+		if (programmCounter < 0) {
+			programmCounter = -1;
+		}
 
 		runtimeCount++;
 		runtimeCount++;
@@ -518,7 +523,7 @@ public class ControllUnit extends Thread {
 
 		// PCL is updated in incrementPC afterwards
 		programmCounter = k + tempVal - 1;
-		
+
 		runtimeCount++;
 		runtimeCount++;
 	}
@@ -742,13 +747,22 @@ public class ControllUnit extends Thread {
 	}
 
 	private void incfsz(int fileAdress, int destination) {
-		// TODO test
-		incf(fileAdress, destination);
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress) + 1;
 
-		if (dataStorage.readBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit()) > 0) {
-			nop();
-			incrementPC();
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+			if (dataStorage.readW() == 0) {
+				execute(0);
+			}
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+			if (dataStorage.readByte(fileAdress) == 0) {
+				execute(0);
+			}
 		}
+
+		runtimeCount++;
 	}
 
 	private void incf(int fileAdress, int destination) {
@@ -767,12 +781,22 @@ public class ControllUnit extends Thread {
 	}
 
 	private void decfsz(int fileAdress, int destination) {
-		// TODO test
-		decf(fileAdress, destination);
+		int tempVal = 0;
+		tempVal = dataStorage.readByte(fileAdress) - 1;
 
-		if (dataStorage.readBit(SpecialRegister.Z.getAddress(), SpecialRegister.Z.getBit()) > 0) {
-			nop();
+		if (destination == 0) {
+			dataStorage.writeW(tempVal);
+			if (dataStorage.readW() == 0) {
+				execute(0);
+			}
+		} else {
+			dataStorage.writeByte(fileAdress, tempVal);
+			if (dataStorage.readByte(fileAdress) == 0) {
+				execute(0);
+			}
 		}
+
+		runtimeCount++;
 	}
 
 	private void decf(int fileAdress, int destination) {

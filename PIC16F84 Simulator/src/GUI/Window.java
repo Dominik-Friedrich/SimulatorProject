@@ -47,6 +47,7 @@ import javax.swing.table.DefaultTableModel;
 
 import org.junit.jupiter.params.provider.EmptySource;
 
+import Controller.AutoRun;
 import Controller.ControllUnit;
 import Memory.DataMemory;
 import Memory.ProgrammMemory;
@@ -59,7 +60,9 @@ import javax.swing.ScrollPaneConstants;
 public class Window extends JFrame implements ActionListener {
 	private ControllUnit controller;
 	private ReadLST lstReader;
-
+	private AutoRun autorunner;
+	private boolean autorun = false;
+	
 	private JTable table;
 	private JLabel sfrAndWVal[] = new JLabel[9];
 	private JLabel sfrBit[] = new JLabel[24];
@@ -89,7 +92,7 @@ public class Window extends JFrame implements ActionListener {
 	 */
 	public Window() {
 		controller = new ControllUnit(this);
-	
+
 		try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 			SwingUtilities.updateComponentTreeUI(this);
@@ -546,8 +549,26 @@ public class Window extends JFrame implements ActionListener {
 			}
 		});
 		JButton btnStart = new JButton("Start");
+		btnStart.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!autorun) {
+					autorunner = new AutoRun(controller);
+					autorunner.start();
+					autorun = true;
+				}
+			}
+		});
 
 		JButton btnStop = new JButton("Stopp");
+		btnStop.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (autorun) {
+					autorunner.stop();
+					autorun = false;
+				}
+			}
+		});
+
 		controls.setLayout(new FlowLayout(FlowLayout.CENTER, 100, 5));
 		controls.add(btnReset);
 		controls.add(btnSingleStep);
@@ -591,7 +612,7 @@ public class Window extends JFrame implements ActionListener {
 			for (int i = 0; i < liste.size(); i++) {
 				listeZwei[i] = liste.get(i);
 			}
-			
+
 			speicher = new JList(listeZwei);
 			programmSourceCode.add(speicher);
 			programmSourceCode.setVisible(true);
@@ -604,23 +625,21 @@ public class Window extends JFrame implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void updateGui(DataMemory dataStorage) {
-		int bank[][] = dataStorage.getBank();
+		final int bank[][] = dataStorage.getBank();
 		int programmCounter = controller.getProgrammCounter();
-		
+
 		// update table
 		for (int i = 0; i < bank.length; i++) {
 			for (int j = 0; j < bank[i].length; j++) {
-				table.setValueAt(Integer.toHexString(bank[i][j]).toUpperCase(), (j / 8) + (i * 16), (j % 8) + 1);
+				table.setValueAt(Integer.toHexString(bank[i][j] & 0xFF).toUpperCase(), (j / 8) + (i * 16), (j % 8) + 1);
 			}
 		}
-		
+
 		// update SFR labels ( "SFR + W" and "SFR (Bit)" tabs)
-		
+
 		// SFR + W
 		sfrAndWVal[0].setText(Integer.toHexString(dataStorage.getwRegister()).toUpperCase());
 		sfrAndWVal[1].setText(Integer.toHexString(bank[0][SpecialRegister.PCL.getAddress()]).toUpperCase());
@@ -631,10 +650,10 @@ public class Window extends JFrame implements ActionListener {
 		sfrAndWVal[6].setText(Integer.toHexString(bank[1][SpecialRegister.OPTION.getAddress()]).toUpperCase());
 		// update vorteiler
 		sfrAndWVal[8].setText(Integer.toHexString(bank[0][SpecialRegister.TMR0.getAddress()]).toUpperCase());
-		
+
 		// SFR (Bit)
 		int bitmask = 0x80;
-		
+
 		// Status
 		for (int i = 0; i < 8; i++) {
 			if ((bank[0][SpecialRegister.STATUS.getAddress()] & bitmask) > 0) {
@@ -644,7 +663,7 @@ public class Window extends JFrame implements ActionListener {
 			}
 			bitmask = bitmask >> 1;
 		}
-		
+
 		// Option
 		bitmask = 0x80;
 		for (int i = 0; i < 8; i++) {
@@ -655,7 +674,7 @@ public class Window extends JFrame implements ActionListener {
 			}
 			bitmask = bitmask >> 1;
 		}
-		
+
 		// Intcon
 		bitmask = 0x80;
 		for (int i = 0; i < 8; i++) {
@@ -666,14 +685,14 @@ public class Window extends JFrame implements ActionListener {
 			}
 			bitmask = bitmask >> 1;
 		}
-		
+
 		// TODO Stack, Port A, Port B
-		
+
 		// Set selected row
 		int currCount = 0;
 		if (speicher != null) {
 			for (int i = 0; i < speicher.getModel().getSize(); i++) {
-				if (!(((String)(speicher.getModel().getElementAt(i))).startsWith(" "))) {
+				if (!(((String) (speicher.getModel().getElementAt(i))).startsWith(" "))) {
 					if (currCount == programmCounter) {
 						speicher.setSelectedIndex(i);
 						break;

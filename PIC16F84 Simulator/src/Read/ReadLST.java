@@ -51,7 +51,6 @@ public class ReadLST {
 			hexlist.add(i, Integer.parseInt(liste.get(i), 16));
 
 		}
-
 		return hexlist;
 	}
 
