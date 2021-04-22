@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.awt.event.ActionEvent;
 import net.miginfocom.swing.MigLayout;
@@ -46,17 +47,26 @@ import javax.swing.table.DefaultTableModel;
 
 import org.junit.jupiter.params.provider.EmptySource;
 
+import Controller.ControllUnit;
+import Memory.DataMemory;
+import Memory.ProgrammMemory;
+import Memory.SpecialRegister;
 import Read.ReadLST;
 
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
 public class Window extends JFrame implements ActionListener {
+	private ControllUnit controller;
+	private ReadLST lstReader;
+
 	private JTable table;
+	private JLabel sfrAndWVal[] = new JLabel[9];
+	private JLabel sfrBit[] = new JLabel[24];
 	private JPanel programmSourceCode;
 	private JScrollPane scrollPane_1;
 	private JList<Object> speicher;
-	
+
 	/**
 	 * Launch the application.
 	 */
@@ -71,12 +81,15 @@ public class Window extends JFrame implements ActionListener {
 				}
 			}
 		});
+
 	}
 
 	/**
 	 * Create the frame.
 	 */
 	public Window() {
+		controller = new ControllUnit(this);
+	
 		try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 			SwingUtilities.updateComponentTreeUI(this);
@@ -131,29 +144,29 @@ public class Window extends JFrame implements ActionListener {
 		lblFsr.setBounds(10, 135, 64, 14);
 		specialFunctionRegisterAndW.add(lblFsr);
 
-		JLabel lblwRegisterValue = new JLabel("00");
-		lblwRegisterValue.setBounds(90, 25, 25, 14);
-		specialFunctionRegisterAndW.add(lblwRegisterValue);
+		sfrAndWVal[0] = new JLabel("00");
+		sfrAndWVal[0].setBounds(90, 25, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[0]);
 
-		JLabel lblPclValue = new JLabel("00");
-		lblPclValue.setBounds(90, 47, 25, 14);
-		specialFunctionRegisterAndW.add(lblPclValue);
+		sfrAndWVal[1] = new JLabel("00");
+		sfrAndWVal[1].setBounds(90, 47, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[1]);
 
-		JLabel lblPclathValue = new JLabel("00");
-		lblPclathValue.setBounds(90, 69, 25, 14);
-		specialFunctionRegisterAndW.add(lblPclathValue);
+		sfrAndWVal[2] = new JLabel("00");
+		sfrAndWVal[2].setBounds(90, 69, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[2]);
 
-		JLabel lblPcinternValue = new JLabel("00");
-		lblPcinternValue.setBounds(90, 91, 25, 14);
-		specialFunctionRegisterAndW.add(lblPcinternValue);
+		sfrAndWVal[3] = new JLabel("00");
+		sfrAndWVal[3].setBounds(90, 91, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[3]);
 
-		JLabel lblStatusValue = new JLabel("00");
-		lblStatusValue.setBounds(90, 113, 25, 14);
-		specialFunctionRegisterAndW.add(lblStatusValue);
+		sfrAndWVal[4] = new JLabel("00");
+		sfrAndWVal[4].setBounds(90, 113, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[4]);
 
-		JLabel lblFsrValue = new JLabel("00");
-		lblFsrValue.setBounds(90, 135, 25, 14);
-		specialFunctionRegisterAndW.add(lblFsrValue);
+		sfrAndWVal[5] = new JLabel("00");
+		sfrAndWVal[5].setBounds(90, 135, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[5]);
 
 		JLabel lblOption = new JLabel("Option:");
 		lblOption.setBounds(163, 25, 64, 14);
@@ -167,17 +180,17 @@ public class Window extends JFrame implements ActionListener {
 		lblTimer.setBounds(163, 69, 64, 14);
 		specialFunctionRegisterAndW.add(lblTimer);
 
-		JLabel lblwOptionValue = new JLabel("00");
-		lblwOptionValue.setBounds(237, 25, 25, 14);
-		specialFunctionRegisterAndW.add(lblwOptionValue);
+		sfrAndWVal[6] = new JLabel("00");
+		sfrAndWVal[6].setBounds(237, 25, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[6]);
 
-		JLabel lblwVorteilerValue = new JLabel("00");
-		lblwVorteilerValue.setBounds(237, 47, 25, 14);
-		specialFunctionRegisterAndW.add(lblwVorteilerValue);
+		sfrAndWVal[7] = new JLabel("00");
+		sfrAndWVal[7].setBounds(237, 47, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[7]);
 
-		JLabel lblTimerValue = new JLabel("00");
-		lblTimerValue.setBounds(237, 69, 25, 14);
-		specialFunctionRegisterAndW.add(lblTimerValue);
+		sfrAndWVal[8] = new JLabel("00");
+		sfrAndWVal[8].setBounds(237, 69, 25, 14);
+		specialFunctionRegisterAndW.add(sfrAndWVal[8]);
 
 		JPanel specialFunctionRegisterInBits = new JPanel();
 		specialFunctionRegisterInBits.setLayout(null);
@@ -232,37 +245,37 @@ public class Window extends JFrame implements ActionListener {
 		lblC.setBounds(275, 25, 20, 14);
 		specialFunctionRegisterInBits.add(lblC);
 
-		JLabel lblIrp_1 = new JLabel("0");
-		lblIrp_1.setBounds(65, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblIrp_1);
+		sfrBit[0] = new JLabel("0");
+		sfrBit[0].setBounds(65, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[0]);
 
-		JLabel lblRp1_1 = new JLabel("0");
-		lblRp1_1.setBounds(95, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblRp1_1);
+		sfrBit[1] = new JLabel("0");
+		sfrBit[1].setBounds(95, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[1]);
 
-		JLabel lblRp0_1 = new JLabel("0");
-		lblRp0_1.setBounds(125, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblRp0_1);
+		sfrBit[2] = new JLabel("0");
+		sfrBit[2].setBounds(125, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[2]);
 
-		JLabel lblTo_1 = new JLabel("0");
-		lblTo_1.setBounds(155, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblTo_1);
+		sfrBit[3] = new JLabel("0");
+		sfrBit[3].setBounds(155, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[3]);
 
-		JLabel lblPd_1 = new JLabel("0");
-		lblPd_1.setBounds(185, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblPd_1);
+		sfrBit[4] = new JLabel("0");
+		sfrBit[4].setBounds(185, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[4]);
 
-		JLabel lblZ_1 = new JLabel("0");
-		lblZ_1.setBounds(215, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblZ_1);
+		sfrBit[5] = new JLabel("0");
+		sfrBit[5].setBounds(215, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[5]);
 
-		JLabel lblDc_1 = new JLabel("0");
-		lblDc_1.setBounds(245, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblDc_1);
+		sfrBit[6] = new JLabel("0");
+		sfrBit[6].setBounds(245, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[6]);
 
-		JLabel lblC_1 = new JLabel("0");
-		lblC_1.setBounds(275, 47, 20, 14);
-		specialFunctionRegisterInBits.add(lblC_1);
+		sfrBit[7] = new JLabel("0");
+		sfrBit[7].setBounds(275, 47, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[7]);
 
 		JLabel lblRpu = new JLabel("RPu");
 		lblRpu.setBounds(65, 69, 20, 14);
@@ -296,37 +309,37 @@ public class Window extends JFrame implements ActionListener {
 		lblPs0.setBounds(275, 69, 20, 14);
 		specialFunctionRegisterInBits.add(lblPs0);
 
-		JLabel lblRpu_1 = new JLabel("0");
-		lblRpu_1.setBounds(65, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblRpu_1);
+		sfrBit[8] = new JLabel("0");
+		sfrBit[8].setBounds(65, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[8]);
 
-		JLabel lblIeg_1 = new JLabel("0");
-		lblIeg_1.setBounds(95, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblIeg_1);
+		sfrBit[9] = new JLabel("0");
+		sfrBit[9].setBounds(95, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[9]);
 
-		JLabel lblRp_1_2_1 = new JLabel("0");
-		lblRp_1_2_1.setBounds(125, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblRp_1_2_1);
+		sfrBit[10] = new JLabel("0");
+		sfrBit[10].setBounds(125, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[10]);
 
-		JLabel lblTse_1 = new JLabel("0");
-		lblTse_1.setBounds(155, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblTse_1);
+		sfrBit[11] = new JLabel("0");
+		sfrBit[11].setBounds(155, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[11]);
 
-		JLabel lblPsa_1 = new JLabel("0");
-		lblPsa_1.setBounds(185, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblPsa_1);
+		sfrBit[12] = new JLabel("0");
+		sfrBit[12].setBounds(185, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[12]);
 
-		JLabel lblPs2_1 = new JLabel("0");
-		lblPs2_1.setBounds(215, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblPs2_1);
+		sfrBit[13] = new JLabel("0");
+		sfrBit[13].setBounds(215, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[13]);
 
-		JLabel lblPs1_1 = new JLabel("0");
-		lblPs1_1.setBounds(245, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblPs1_1);
+		sfrBit[14] = new JLabel("0");
+		sfrBit[14].setBounds(245, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[14]);
 
-		JLabel lblPs0_1 = new JLabel("0");
-		lblPs0_1.setBounds(275, 91, 20, 14);
-		specialFunctionRegisterInBits.add(lblPs0_1);
+		sfrBit[15] = new JLabel("0");
+		sfrBit[15].setBounds(275, 91, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[15]);
 
 		JLabel lblGie = new JLabel("GIE");
 		lblGie.setBounds(65, 113, 20, 14);
@@ -360,37 +373,37 @@ public class Window extends JFrame implements ActionListener {
 		lblRif.setBounds(275, 113, 20, 14);
 		specialFunctionRegisterInBits.add(lblRif);
 
-		JLabel lblGie_1 = new JLabel("0");
-		lblGie_1.setBounds(65, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblGie_1);
+		sfrBit[16] = new JLabel("0");
+		sfrBit[16].setBounds(65, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[16]);
 
-		JLabel lblEie_1 = new JLabel("0");
-		lblEie_1.setBounds(95, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblEie_1);
+		sfrBit[17] = new JLabel("0");
+		sfrBit[17].setBounds(95, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[17]);
 
-		JLabel lblTie_1 = new JLabel("0");
-		lblTie_1.setBounds(125, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblTie_1);
+		sfrBit[18] = new JLabel("0");
+		sfrBit[18].setBounds(125, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[18]);
 
-		JLabel lblIe_1 = new JLabel("0");
-		lblIe_1.setBounds(155, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblIe_1);
+		sfrBit[19] = new JLabel("0");
+		sfrBit[19].setBounds(155, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[19]);
 
-		JLabel lblRie_1 = new JLabel("0");
-		lblRie_1.setBounds(185, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblRie_1);
+		sfrBit[20] = new JLabel("0");
+		sfrBit[20].setBounds(185, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[20]);
 
-		JLabel lblTif_1 = new JLabel("0");
-		lblTif_1.setBounds(215, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblTif_1);
+		sfrBit[21] = new JLabel("0");
+		sfrBit[21].setBounds(215, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[21]);
 
-		JLabel lblIf_1 = new JLabel("0");
-		lblIf_1.setBounds(245, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblIf_1);
+		sfrBit[22] = new JLabel("0");
+		sfrBit[22].setBounds(245, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[22]);
 
-		JLabel lblRif_1 = new JLabel("0");
-		lblRif_1.setBounds(275, 135, 20, 14);
-		specialFunctionRegisterInBits.add(lblRif_1);
+		sfrBit[23] = new JLabel("0");
+		sfrBit[23].setBounds(275, 135, 20, 14);
+		specialFunctionRegisterInBits.add(sfrBit[23]);
 
 		JPanel stackRegister = new JPanel();
 		stackRegister.setLayout(null);
@@ -423,7 +436,7 @@ public class Window extends JFrame implements ActionListener {
 		programmSourceCode.setBounds(10, 204, 759, 438);
 		getContentPane().add(programmSourceCode);
 		programmSourceCode.setLayout(new BorderLayout(0, 0));
-		
+
 		scrollPane_1 = new JScrollPane();
 		programmSourceCode.add(scrollPane_1, BorderLayout.CENTER);
 
@@ -439,7 +452,7 @@ public class Window extends JFrame implements ActionListener {
 		table.setFillsViewportHeight(true);
 		table.setCellSelectionEnabled(true);
 		table.setModel(new DefaultTableModel(
-				new Object[][] { { " 00", null, null, null, null, null, null, null, null },
+				new String[][] { { " 00", null, null, null, null, null, null, null, null },
 						{ " 08", null, null, null, null, null, null, null, null },
 						{ " 10", null, null, null, null, null, null, null, null },
 						{ " 18", null, null, null, null, null, null, null, null },
@@ -522,11 +535,16 @@ public class Window extends JFrame implements ActionListener {
 		JButton btnReset = new JButton("Reset");
 		btnReset.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				// TODO controller.reset();
 			}
 		});
 
 		JButton btnSingleStep = new JButton("Einzelschritt");
-
+		btnSingleStep.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.run();
+			}
+		});
 		JButton btnStart = new JButton("Start");
 
 		JButton btnStop = new JButton("Stopp");
@@ -538,15 +556,14 @@ public class Window extends JFrame implements ActionListener {
 
 		file.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-                
-			    inputfile();
 
-				
+				inputfile();
+
 			}
 		});
-
+		updateGui(controller.getData());
 	}
-	
+
 	public void inputfile() {
 		ArrayList<String> liste = new ArrayList<String>();
 		int response;
@@ -562,7 +579,7 @@ public class Window extends JFrame implements ActionListener {
 				scan = new Scanner(fileOne);
 				while (scan.hasNextLine()) {
 					String line = scan.nextLine();
-                    liste.add(line);
+					liste.add(line);
 				}
 
 			} catch (FileNotFoundException e1) {
@@ -571,22 +588,100 @@ public class Window extends JFrame implements ActionListener {
 			}
 
 			String listeZwei[] = new String[liste.size()];
-			for(int i=0; i<liste.size(); i++){
+			for (int i = 0; i < liste.size(); i++) {
 				listeZwei[i] = liste.get(i);
 			}
-
+			
 			speicher = new JList(listeZwei);
 			programmSourceCode.add(speicher);
 			programmSourceCode.setVisible(true);
 			scrollPane_1.setViewportView(speicher);
-		    
+
+			lstReader = new ReadLST(fileOne.getAbsolutePath());
+			controller.newProgramm(lstReader.parseHex());
 		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
+
+	}
+
+	public void updateGui(DataMemory dataStorage) {
+		int bank[][] = dataStorage.getBank();
+		int programmCounter = controller.getProgrammCounter();
 		
+		// update table
+		for (int i = 0; i < bank.length; i++) {
+			for (int j = 0; j < bank[i].length; j++) {
+				table.setValueAt(Integer.toHexString(bank[i][j]).toUpperCase(), (j / 8) + (i * 16), (j % 8) + 1);
+			}
+		}
+		
+		// update SFR labels ( "SFR + W" and "SFR (Bit)" tabs)
+		
+		// SFR + W
+		sfrAndWVal[0].setText(Integer.toHexString(dataStorage.getwRegister()).toUpperCase());
+		sfrAndWVal[1].setText(Integer.toHexString(bank[0][SpecialRegister.PCL.getAddress()]).toUpperCase());
+		sfrAndWVal[2].setText(Integer.toHexString(bank[0][SpecialRegister.PCLATH0.getAddress()]).toUpperCase());
+		sfrAndWVal[3].setText(Integer.toHexString(programmCounter).toUpperCase());
+		sfrAndWVal[4].setText(Integer.toHexString(bank[0][SpecialRegister.STATUS.getAddress()]).toUpperCase());
+		sfrAndWVal[5].setText(Integer.toHexString(bank[0][SpecialRegister.FSR.getAddress()]).toUpperCase());
+		sfrAndWVal[6].setText(Integer.toHexString(bank[1][SpecialRegister.OPTION.getAddress()]).toUpperCase());
+		// update vorteiler
+		sfrAndWVal[8].setText(Integer.toHexString(bank[0][SpecialRegister.TMR0.getAddress()]).toUpperCase());
+		
+		// SFR (Bit)
+		int bitmask = 0x80;
+		
+		// Status
+		for (int i = 0; i < 8; i++) {
+			if ((bank[0][SpecialRegister.STATUS.getAddress()] & bitmask) > 0) {
+				sfrBit[i].setText("1");
+			} else {
+				sfrBit[i].setText("0");
+			}
+			bitmask = bitmask >> 1;
+		}
+		
+		// Option
+		bitmask = 0x80;
+		for (int i = 0; i < 8; i++) {
+			if ((bank[1][SpecialRegister.OPTION.getAddress()] & bitmask) > 0) {
+				sfrBit[i + 8].setText("1");
+			} else {
+				sfrBit[i + 8].setText("0");
+			}
+			bitmask = bitmask >> 1;
+		}
+		
+		// Intcon
+		bitmask = 0x80;
+		for (int i = 0; i < 8; i++) {
+			if ((bank[0][SpecialRegister.INTCON.getAddress()] & bitmask) > 0) {
+				sfrBit[i + 16].setText("1");
+			} else {
+				sfrBit[i + 16].setText("0");
+			}
+			bitmask = bitmask >> 1;
+		}
+		
+		// TODO Stack, Port A, Port B
+		
+		// Set selected row
+		int currCount = 0;
+		if (speicher != null) {
+			for (int i = 0; i < speicher.getModel().getSize(); i++) {
+				if (!(((String)(speicher.getModel().getElementAt(i))).startsWith(" "))) {
+					if (currCount == programmCounter) {
+						speicher.setSelectedIndex(i);
+						break;
+					}
+					currCount++;
+				}
+			}
+		}
 	}
 
 }

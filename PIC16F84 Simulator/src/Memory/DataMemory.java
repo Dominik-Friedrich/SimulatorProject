@@ -4,7 +4,7 @@ import Controller.ControllUnit;
 
 public class DataMemory {
 	private ControllUnit controller;
-	
+
 	private int[][] bank = { new int[128], new int[128] };
 	private int wRegister = 0;
 
@@ -12,9 +12,13 @@ public class DataMemory {
 	public DataMemory(ControllUnit controller) {
 		this.controller = controller;
 	}
-	
+
 	// USED ONLY FOR TESTING
 	public DataMemory() {
+	}
+
+	public int[][] getBank() {
+		return bank;
 	}
 
 	public void powerOnReset() {
@@ -23,7 +27,7 @@ public class DataMemory {
 		writeByte(SpecialRegister.STATUS.getAddress(), 24);
 		writeByte(SpecialRegister.PCLATH0.getAddress(), 0);
 		writeByte(SpecialRegister.INTCON.getAddress(), 0);
-
+		
 		// Bank 1
 		setBit(SpecialRegister.RP0.getAddress(), SpecialRegister.RP0.getBit());
 
@@ -54,8 +58,12 @@ public class DataMemory {
 		clearBit(SpecialRegister.RP0.getAddress(), SpecialRegister.RP0.getBit());
 	}
 
+	public int getwRegister() {
+		return wRegister;
+	}
+
 	public void writeByte(int address, int value) {
-		if(address == 0) {
+		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
 		if (address == SpecialRegister.TMR0.getAddress()) {
@@ -64,7 +72,7 @@ public class DataMemory {
 		if (address == SpecialRegister.PCL.getAddress()) {
 			controller.changePC();
 		}
-		
+
 		value = value & 0b11111111;
 
 		if (isMirrored(address)) {
@@ -82,23 +90,23 @@ public class DataMemory {
 	}
 
 	public void clearByte(int address) {
-		if(address == 0) {
+		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
-		
+
 		writeByte(address, 0);
 	}
 
 	public void writePCL(int value) {
-		bank[0][SpecialRegister.PCL.getAddress()] = value & 0xFF;  
+		bank[0][SpecialRegister.PCL.getAddress()] = value & 0xFF;
 		bank[1][SpecialRegister.PCL.getAddress()] = value & 0xFF;
 	}
-	
+
 	public int readByte(int address) {
-		if(address == 0) {
+		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
-		
+
 		int retByte = 0;
 
 		if (readBit(SpecialRegister.RP0.getAddress(), SpecialRegister.RP0.getBit()) == 0) {
@@ -113,7 +121,7 @@ public class DataMemory {
 	}
 
 	public void setBit(int address, int bit) {
-		if(address == 0) {
+		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
 		if (address == SpecialRegister.TMR0.getAddress()) {
@@ -122,7 +130,7 @@ public class DataMemory {
 		if (address == SpecialRegister.PCL.getAddress()) {
 			controller.changePC();
 		}
-		
+
 		int bitmask = 1 << bit;
 
 		if (isMirrored(address)) {
@@ -140,27 +148,32 @@ public class DataMemory {
 	}
 
 	public void clearBit(int address, int bit) {
-		if(address == 0) {
+		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
-		
+
 		int bitmask = 1 << bit;
 		bitmask = bitmask ^ 0b11111111;
 
-		if ((MirroredRegister.STATUS.getAddress() & 0b100000) == 0) {
-			// RP0 is not set -> bank0 as target
+		if (isMirrored(address)) {
 			bank[0][address] = bank[0][address] & bitmask;
-		} else {
-			// RP0 is set -> bank1 as target
 			bank[1][address] = bank[1][address] & bitmask;
+		} else {
+			if ((MirroredRegister.STATUS.getAddress() & 0b100000) == 0) {
+				// RP0 is not set -> bank0 as target
+				bank[0][address] = bank[0][address] & bitmask;
+			} else {
+				// RP0 is set -> bank1 as target
+				bank[1][address] = bank[1][address] & bitmask;
+			}
 		}
 	}
 
 	public int readBit(int address, int bit) {
-		if(address == 0) {
+		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
-		
+
 		int retBit = 0;
 		int bitmask = 1 << bit;
 

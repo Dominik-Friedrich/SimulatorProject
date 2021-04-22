@@ -17,11 +17,17 @@ public class PICTimer {
 	}
 
 	public int externalTrigger(int newRA4Val, int sourceEdgeBit) {
+		
+		// check if rising or falling edge should trigger
 		if (sourceEdgeBit == 1) {
+			
+			// falling edge
 			if (lastRA4Val == 1 && newRA4Val == 0) {
 				extTriggerCounter++;
 			}
 		} else {
+			
+			// rising edge
 			if (lastRA4Val == 0 && newRA4Val == 1) {
 				extTriggerCounter++;
 			}

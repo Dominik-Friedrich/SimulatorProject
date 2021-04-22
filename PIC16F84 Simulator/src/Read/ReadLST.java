@@ -8,43 +8,51 @@ import java.io.File;
 
 public class ReadLST {
 
-    public File data;
-    public Scanner scan;
-    public ArrayList<String> liste = new ArrayList<String>();
+	public File data;
+	public Scanner scan;
+	public ArrayList<String> liste = new ArrayList<String>();
 
-    public ReadLST(String path) { //Constructor with File-Path
+	public ReadLST(String path) { // Constructor with File-Path
 
-        this.data = new File(path);
+		this.data = new File(path);
+		try {
+			initializeScanner();
+			readFile();
+		} catch (Exception e) {
+			System.out.println("Error reading File");
+		}
+	}
 
-    }
+	public void initializeScanner() throws FileNotFoundException { // setting up the File Scanner with fitting File
+		this.scan = new Scanner(this.data);
+	}
 
-    public Scanner initializeScanner() throws FileNotFoundException { //setting up the File Scanner with fitting File
-        this.scan = new Scanner(this.data);
-        return this.scan;
-    }
+	public void readFile() { // Read the File and save in new String ArrayList, return new list
 
-    public ArrayList<String> readFile() { //Read the File and save in new String ArrayList, return new list
+		while (this.scan.hasNextLine()) {
+			String arr[];
+			String line = scan.nextLine();
+			if (!line.startsWith(" ")) {
+				arr = line.split(" ");
+				if (arr[1].length() == 4) {
+					liste.add(arr[1]);
+				}
 
-        while (this.scan.hasNextLine()) {
-            String line = scan.nextLine();
-            liste.add(line);
+			}
+		}
+	}
 
-        }
+	public ArrayList<Integer> parseHex() { // Parsing Hex Codes in new Integer ArrayList, return new list
 
-        return liste;
-    }
+		ArrayList<Integer> hexlist = new ArrayList<Integer>();
 
-    public ArrayList<Integer> parseHex() { //Parsing Hex Codes in new Integer ArrayList, return new list
+		for (int i = 0; i < liste.size(); i++) {
 
-        ArrayList<Integer> hexlist = new ArrayList<Integer>();
+			hexlist.add(i, Integer.parseInt(liste.get(i), 16));
 
-        for (int i = 0; i < liste.size(); i++) {
+		}
 
-            hexlist.add(i, Integer.parseInt(liste.get(i), 16)); 
-
-        }
-
-        return hexlist;
-    }
+		return hexlist;
+	}
 
 }

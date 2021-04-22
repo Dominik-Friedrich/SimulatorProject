@@ -11,7 +11,6 @@ import Read.ReadLST;
 
 public class ControllUnit extends Thread {
 	private Window gui;
-	private ReadLST lstParser;
 	private ProgrammMemory programmStorage;
 	private StackMemory stack;
 	private DataMemory dataStorage;
@@ -31,9 +30,8 @@ public class ControllUnit extends Thread {
 	// THIS SHOULD BE THE FINAL CONSTRUCTOR
 	// TODO remove others in finished program
 	// TODO might not need readLST here
-	public ControllUnit(Window gui, ReadLST lstParser) {
+	public ControllUnit(Window gui) {
 		this.gui = gui;
-		this.lstParser = lstParser;
 		this.stack = new StackMemory();
 		this.dataStorage = new DataMemory(this);
 		this.programmStorage = new ProgrammMemory();
@@ -87,7 +85,7 @@ public class ControllUnit extends Thread {
 				dataStorage.setBit(SpecialRegister.T0IF.getAddress(), SpecialRegister.T0IF.getAddress());
 			}
 
-			//gui.updateGUI(dataStorage);
+			gui.updateGui(dataStorage);
 		}
 	}
 
@@ -96,6 +94,7 @@ public class ControllUnit extends Thread {
 		dataStorage.powerOnReset();
 		runtimeCount = 0;
 		programmCounter = 0;
+		gui.updateGui(dataStorage);
 	}
 
 	private void incrementPC() {
