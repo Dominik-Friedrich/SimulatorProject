@@ -576,7 +576,7 @@ public class Window extends JFrame implements ActionListener {
 		if (response == JFileChooser.APPROVE_OPTION) {
 			fileOne = chooser.getSelectedFile();
 			try {
-				scan = new Scanner(fileOne);
+				scan = new Scanner(fileOne, "ISO-8859-1");
 				while (scan.hasNextLine()) {
 					String line = scan.nextLine();
 					liste.add(line);
