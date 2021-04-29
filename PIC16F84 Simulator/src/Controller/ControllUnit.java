@@ -56,7 +56,7 @@ public class ControllUnit {
 	public void run() {
 		if (programmStorage != null) {
 			lastRuntimeCount = runtimeCount;
-			
+
 			if (interruptHappened()) {
 				dataStorage.clearBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit());
 				// CALL to address 0x04
@@ -65,12 +65,7 @@ public class ControllUnit {
 			execute(programmStorage.read(programmCounter));
 
 			// Timer
-			if (dataStorage.getT0CS() > 0) {
-				// update on RA4
-				timer.externalTrigger(
-						dataStorage.readBit(SpecialRegister.RA4.getAddress(), SpecialRegister.RA4.getBit()),
-						dataStorage.readBit(SpecialRegister.INTEDG.getAddress(), SpecialRegister.INTEDG.getBit()));
-			} else {
+			if (dataStorage.getT0CS() == 0) {
 				// Update on cycle clock
 				// update for how many cycles happened
 				for (int i = 0; i < (runtimeCount - lastRuntimeCount); i++) {
@@ -81,12 +76,12 @@ public class ControllUnit {
 			// check for overflow
 			if (timer.overflow()) {
 				// timer overflow, set T0IF
-				dataStorage.setBit(SpecialRegister.T0IF.getAddress(), SpecialRegister.T0IF.getAddress());
+				dataStorage.setBit(SpecialRegister.T0IF.getAddress(), SpecialRegister.T0IF.getBit());
 				updateZeroFlag(0);
 				timer.clearOverflow();
 			}
 
-			gui.updateGui(dataStorage);
+			gui.updateGui(dataStorage, stack);
 		}
 	}
 
@@ -95,9 +90,9 @@ public class ControllUnit {
 		dataStorage.powerOnReset();
 		runtimeCount = 0;
 		programmCounter = 0;
-		gui.updateGui(dataStorage);
+		gui.updateGui(dataStorage, stack);
 	}
-	
+
 	public void timerUpdate(int newTimerValue) {
 		timer.registerUpdate(newTimerValue);
 	}
@@ -159,6 +154,27 @@ public class ControllUnit {
 		}
 
 		return bRet;
+	}
+
+	public void pinUpdate(boolean value, int bit, char pin) {
+		if (value) {
+			// TODO Pin B interrupt
+			dataStorage.setPin(bit, pin);
+		} else {
+			dataStorage.ClearPin(bit, pin);
+		}
+
+		gui.updateGui(dataStorage, stack);
+	}
+
+	public void externalTimerTrigger() {
+		if (dataStorage.getT0CS() > 0) {
+			dataStorage.setTMR0(timer.externalTrigger(dataStorage.getRA4(), dataStorage.getT0SE()));
+		}
+	}
+	
+	public int getPSA() {
+		return dataStorage.getPSA();
 	}
 
 	// decoding the OPC and executing it

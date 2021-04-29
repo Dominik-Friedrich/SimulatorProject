@@ -52,20 +52,29 @@ import Controller.ControllUnit;
 import Memory.DataMemory;
 import Memory.ProgrammMemory;
 import Memory.SpecialRegister;
+import Memory.StackMemory;
 import Read.ReadLST;
 
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
 
 public class Window extends JFrame implements ActionListener {
 	private ControllUnit controller;
 	private ReadLST lstReader;
 	private AutoRun autorunner;
 	private boolean autorun = false;
-	
+
 	private JTable table;
 	private JLabel sfrAndWVal[] = new JLabel[9];
 	private JLabel sfrBit[] = new JLabel[24];
+	private JLabel stack[] = new JLabel[8];
+	private JCheckBox trisA[] = new JCheckBox[8];
+	private JCheckBox trisB[] = new JCheckBox[8];
+	private JCheckBox pinA[] = new JCheckBox[5];
+	private JCheckBox pinB[] = new JCheckBox[8];
 	private JPanel programmSourceCode;
 	private JScrollPane scrollPane_1;
 	private JList<Object> speicher;
@@ -416,6 +425,38 @@ public class Window extends JFrame implements ActionListener {
 		stackRegister.setBounds(669, 33, 100, 160);
 		getContentPane().add(stackRegister);
 
+		stack[0] = new JLabel("0000");
+		stack[0].setBounds(33, 25, 25, 14);
+		stackRegister.add(stack[0]);
+
+		stack[1] = new JLabel("0000");
+		stack[1].setBounds(33, 40, 25, 14);
+		stackRegister.add(stack[1]);
+
+		stack[2] = new JLabel("0000");
+		stack[2].setBounds(33, 70, 25, 14);
+		stackRegister.add(stack[2]);
+
+		stack[3] = new JLabel("0000");
+		stack[3].setBounds(33, 55, 25, 14);
+		stackRegister.add(stack[3]);
+
+		stack[4] = new JLabel("0000");
+		stack[4].setBounds(33, 85, 25, 14);
+		stackRegister.add(stack[4]);
+
+		stack[5] = new JLabel("0000");
+		stack[5].setBounds(33, 100, 25, 14);
+		stackRegister.add(stack[5]);
+
+		stack[6] = new JLabel("0000");
+		stack[6].setBounds(33, 130, 25, 14);
+		stackRegister.add(stack[6]);
+
+		stack[7] = new JLabel("0000");
+		stack[7].setBounds(33, 115, 25, 14);
+		stackRegister.add(stack[7]);
+
 		JPanel portARegister = new JPanel();
 		portARegister.setLayout(null);
 		portARegister.setToolTipText("");
@@ -424,6 +465,100 @@ public class Window extends JFrame implements ActionListener {
 		portARegister.setBounds(779, 33, 470, 77);
 		getContentPane().add(portARegister);
 
+		JLabel lblStatus_1_1 = new JLabel("Tris");
+		lblStatus_1_1.setBounds(10, 25, 45, 14);
+		portARegister.add(lblStatus_1_1);
+
+		trisA[0] = new JCheckBox("7");
+		trisA[0].setEnabled(false);
+		trisA[0].setBounds(60, 20, 38, 23);
+		portARegister.add(trisA[0]);
+
+		trisA[1] = new JCheckBox("6");
+		trisA[1].setEnabled(false);
+		trisA[1].setBounds(110, 20, 38, 23);
+		portARegister.add(trisA[1]);
+
+		trisA[2] = new JCheckBox("5");
+		trisA[2].setEnabled(false);
+		trisA[2].setBounds(160, 20, 38, 23);
+		portARegister.add(trisA[2]);
+
+		trisA[3] = new JCheckBox("4");
+		trisA[3].setEnabled(false);
+		trisA[3].setBounds(210, 20, 38, 23);
+		portARegister.add(trisA[3]);
+
+		trisA[4] = new JCheckBox("3");
+		trisA[4].setEnabled(false);
+		trisA[4].setBounds(260, 20, 38, 23);
+		portARegister.add(trisA[4]);
+
+		trisA[5] = new JCheckBox("2");
+		trisA[5].setEnabled(false);
+		trisA[5].setBounds(310, 20, 38, 23);
+		portARegister.add(trisA[5]);
+
+		trisA[6] = new JCheckBox("1");
+		trisA[6].setEnabled(false);
+		trisA[6].setBounds(360, 20, 38, 23);
+		portARegister.add(trisA[6]);
+
+		trisA[7] = new JCheckBox("0");
+		trisA[7].setEnabled(false);
+		trisA[7].setBounds(410, 20, 38, 23);
+		portARegister.add(trisA[7]);
+
+		JLabel lblStatus_1_1_1 = new JLabel("Pin");
+		lblStatus_1_1_1.setBounds(10, 52, 45, 14);
+		portARegister.add(lblStatus_1_1_1);
+
+		pinA[0] = new JCheckBox("4");
+		pinA[0].setBounds(210, 47, 38, 23);
+		pinA[0].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinA[0].isSelected(), 4, 'A');
+				controller.externalTimerTrigger();
+			}
+		});
+		portARegister.add(pinA[0]);
+
+		pinA[1] = new JCheckBox("3");
+		pinA[1].setBounds(260, 47, 38, 23);
+		pinA[1].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinA[1].isSelected(), 3, 'A');
+			}
+		});
+		portARegister.add(pinA[1]);
+
+		pinA[2] = new JCheckBox("2");
+		pinA[2].setBounds(310, 47, 38, 23);
+		pinA[2].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinA[2].isSelected(), 2, 'A');
+			}
+		});
+		portARegister.add(pinA[2]);
+
+		pinA[3] = new JCheckBox("1");
+		pinA[3].setBounds(360, 47, 38, 23);
+		pinA[3].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinA[3].isSelected(), 1, 'A');
+			}
+		});
+		portARegister.add(pinA[3]);
+
+		pinA[4] = new JCheckBox("0");
+		pinA[4].setBounds(410, 47, 38, 23);
+		pinA[4].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinA[4].isSelected(), 0, 'A');
+			}
+		});
+		portARegister.add(pinA[4]);
+
 		JPanel portBRegister = new JPanel();
 		portBRegister.setLayout(null);
 		portBRegister.setToolTipText("");
@@ -431,6 +566,126 @@ public class Window extends JFrame implements ActionListener {
 				"Port B", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		portBRegister.setBounds(779, 116, 470, 77);
 		getContentPane().add(portBRegister);
+
+		JLabel lblStatus_1_1_2 = new JLabel("Tris");
+		lblStatus_1_1_2.setBounds(10, 25, 45, 14);
+		portBRegister.add(lblStatus_1_1_2);
+
+		trisB[0] = new JCheckBox("7");
+		trisB[0].setEnabled(false);
+		trisB[0].setBounds(60, 20, 38, 23);
+		portBRegister.add(trisB[0]);
+
+		trisB[1] = new JCheckBox("6");
+		trisB[1].setEnabled(false);
+		trisB[1].setBounds(110, 20, 38, 23);
+		portBRegister.add(trisB[1]);
+
+		trisB[2] = new JCheckBox("5");
+		trisB[2].setEnabled(false);
+		trisB[2].setBounds(160, 20, 38, 23);
+		portBRegister.add(trisB[2]);
+
+		trisB[3] = new JCheckBox("4");
+		trisB[3].setEnabled(false);
+		trisB[3].setBounds(210, 20, 38, 23);
+		portBRegister.add(trisB[3]);
+
+		trisB[4] = new JCheckBox("3");
+		trisB[4].setEnabled(false);
+		trisB[4].setBounds(260, 20, 38, 23);
+		portBRegister.add(trisB[4]);
+
+		trisB[5] = new JCheckBox("2");
+		trisB[5].setEnabled(false);
+		trisB[5].setBounds(310, 20, 38, 23);
+		portBRegister.add(trisB[5]);
+
+		trisB[6] = new JCheckBox("1");
+		trisB[6].setEnabled(false);
+		trisB[6].setBounds(360, 20, 38, 23);
+		portBRegister.add(trisB[6]);
+
+		trisB[7] = new JCheckBox("0");
+		trisB[7].setEnabled(false);
+		trisB[7].setBounds(410, 20, 38, 23);
+		portBRegister.add(trisB[7]);
+
+		JLabel lblPin = new JLabel("Pin");
+		lblPin.setBounds(10, 52, 45, 14);
+		portBRegister.add(lblPin);
+
+		pinB[0] = new JCheckBox("7");
+		pinB[0].setBounds(60, 48, 38, 23);
+		pinB[0].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[0].isSelected(), 7, 'B');
+			}
+		});
+		portBRegister.add(pinB[0]);
+
+		pinB[1] = new JCheckBox("6");
+		pinB[1].setBounds(110, 48, 38, 23);
+		pinB[1].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[1].isSelected(), 6, 'B');
+			}
+		});
+		portBRegister.add(pinB[1]);
+
+		pinB[2] = new JCheckBox("5");
+		pinB[2].setBounds(160, 48, 38, 23);
+		pinB[2].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[2].isSelected(), 5, 'B');
+			}
+		});
+		portBRegister.add(pinB[2]);
+
+		pinB[3] = new JCheckBox("4");
+		pinB[3].setBounds(210, 47, 38, 23);
+		pinB[3].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[3].isSelected(), 4, 'B');
+			}
+		});
+		portBRegister.add(pinB[3]);
+
+		pinB[4] = new JCheckBox("3");
+		pinB[4].setBounds(260, 47, 38, 23);
+		pinB[4].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[4].isSelected(), 3, 'B');
+			}
+		});
+		portBRegister.add(pinB[4]);
+
+		pinB[5] = new JCheckBox("2");
+		pinB[5].setBounds(310, 47, 38, 23);
+		pinB[5].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[5].isSelected(), 2, 'B');
+			}
+		});
+		portBRegister.add(pinB[5]);
+
+		pinB[6] = new JCheckBox("1");
+		pinB[6].setBounds(360, 47, 38, 23);
+		pinB[6].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[6].isSelected(), 1, 'B');
+			}
+		});
+		portBRegister.add(pinB[6]);
+
+		pinB[7] = new JCheckBox("0");
+		pinB[7].setBounds(410, 47, 38, 23);
+		pinB[7].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.pinUpdate(pinB[7].isSelected(), 0, 'B');
+			}
+		});
+		portBRegister.add(pinB[7]);
 
 		programmSourceCode = new JPanel();
 		programmSourceCode.setToolTipText("");
@@ -528,6 +783,36 @@ public class Window extends JFrame implements ActionListener {
 		timing.setBounds(779, 503, 167, 139);
 		getContentPane().add(timing);
 
+		JLabel lblNewLabel_5 = new JLabel("Laufzeit:");
+		lblNewLabel_5.setBounds(10, 22, 46, 14);
+		timing.add(lblNewLabel_5);
+
+		JLabel lblNewLabel_5_1 = new JLabel("Quarz:");
+		lblNewLabel_5_1.setBounds(10, 47, 46, 14);
+		timing.add(lblNewLabel_5_1);
+
+		JLabel lblNewLabel_5_1_1 = new JLabel("Watchdog:");
+		lblNewLabel_5_1_1.setBounds(10, 102, 67, 14);
+		timing.add(lblNewLabel_5_1_1);
+
+		JCheckBox chckbxNewCheckBox_9 = new JCheckBox("Freigabe Watchdog");
+		chckbxNewCheckBox_9.setBounds(6, 75, 151, 23);
+		timing.add(chckbxNewCheckBox_9);
+
+		JLabel lblNewLabel_6 = new JLabel("0 \u03BC");
+		lblNewLabel_6.setBounds(83, 22, 74, 14);
+		timing.add(lblNewLabel_6);
+
+		JLabel lblNewLabel_6_1 = new JLabel("00");
+		lblNewLabel_6_1.setBounds(83, 102, 37, 14);
+		timing.add(lblNewLabel_6_1);
+
+		JComboBox comboBox = new JComboBox();
+		comboBox.setModel(new DefaultComboBoxModel(new String[] { "32 kHz", "100 kHz", "500 kHz", "1 MHz", "2 MHz",
+				"4 MHz", "8 MHz", "12 MHz", "20 MHz" }));
+		comboBox.setBounds(83, 43, 74, 22);
+		timing.add(comboBox);
+
 		JPanel controls = new JPanel();
 		controls.setToolTipText("");
 		controls.setBorder(new TitledBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(192, 192, 192)),
@@ -577,12 +862,9 @@ public class Window extends JFrame implements ActionListener {
 
 		file.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
 				inputfile();
-
 			}
 		});
-		updateGui(controller.getData());
 	}
 
 	public void inputfile() {
@@ -604,7 +886,6 @@ public class Window extends JFrame implements ActionListener {
 				}
 
 			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 
@@ -627,7 +908,7 @@ public class Window extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 	}
 
-	public void updateGui(DataMemory dataStorage) {
+	public void updateGui(DataMemory dataStorage, StackMemory stack) {
 		final int bank[][] = dataStorage.getBank();
 		int programmCounter = controller.getProgrammCounter();
 
@@ -686,7 +967,39 @@ public class Window extends JFrame implements ActionListener {
 			bitmask = bitmask >> 1;
 		}
 
-		// TODO Stack, Port A, Port B
+		// Stack
+		for (int i = 0; i < 8; i++) {
+			this.stack[i].setText((Integer.toHexString(stack.get(i)).toUpperCase()));
+		}
+
+		// Ports A and B
+		bitmask = 0;
+
+		for (int i = 0; i < 8; i++) {
+			bitmask = 0x80 >> i;
+
+			// Tris A
+			if ((bank[1][SpecialRegister.TRISA.getAddress()] & bitmask) > 0) {
+				trisA[i].setSelected(true);
+			} else {
+				trisA[i].setSelected(false);
+			}
+			/*
+			 * // Pin A, only 5 pins if (i > 2) { if
+			 * ((bank[0][SpecialRegister.RA0.getAddress()] & bitmask) > 0) { pinA[i -
+			 * 3].setSelected(true); } else { pinA[i - 3].setSelected(false); } }
+			 */
+			// Tris B
+			if ((bank[1][SpecialRegister.TRISB.getAddress()] & bitmask) > 0) {
+				trisB[i].setSelected(true);
+			} else {
+				trisB[i].setSelected(false);
+			}
+			/*
+			 * // Pin B if ((bank[0][SpecialRegister.RB0.getAddress()] & bitmask) > 0) {
+			 * pinB[i].setSelected(true); } else { pinB[i].setSelected(false); }
+			 */
+		}
 
 		// Set selected row
 		int currCount = 0;
@@ -695,6 +1008,7 @@ public class Window extends JFrame implements ActionListener {
 				if (!(((String) (speicher.getModel().getElementAt(i))).startsWith(" "))) {
 					if (currCount == programmCounter) {
 						speicher.setSelectedIndex(i);
+						speicher.ensureIndexIsVisible(i);
 						break;
 					}
 					currCount++;
@@ -702,5 +1016,4 @@ public class Window extends JFrame implements ActionListener {
 			}
 		}
 	}
-
 }

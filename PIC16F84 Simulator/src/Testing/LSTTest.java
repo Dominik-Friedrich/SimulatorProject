@@ -26,8 +26,6 @@ public class LSTTest {
 
 		instructions = new ArrayList<Integer>();
 	}
-
-	// TODO LST4-15 + LST101
 	
 	@Test
 	public void testLST1() {

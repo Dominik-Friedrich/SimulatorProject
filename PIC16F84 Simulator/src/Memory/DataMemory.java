@@ -132,11 +132,7 @@ public class DataMemory {
 		if (address == 0) {
 			address = readByte(SpecialRegister.FSR.getAddress());
 		}
-		if (address == SpecialRegister.TMR0.getAddress()) {
-			controller.incRuntimeCount();
-			timer.registerUpdate(bank[0][address] | bitmask);
-			timer.setPreScaler(bank[1][address] | bitmask);
-		}
+		
 		if (address == SpecialRegister.PCL.getAddress()) {
 			controller.changePC();
 		}
@@ -152,6 +148,12 @@ public class DataMemory {
 				// RP0 is set -> bank1 as target
 				bank[1][address] = bank[1][address] | bitmask;
 			}
+		}
+		
+		if (address == SpecialRegister.TMR0.getAddress()) {
+			controller.incRuntimeCount();
+			timer.registerUpdate(bank[0][address] | bitmask);
+			timer.setPreScaler(bank[1][address]);
 		}
 	}
 
@@ -215,6 +217,41 @@ public class DataMemory {
 
 		return isMirrored;
 	}
+	
+	public void setPin(int bit, char pin) {
+		int bitmask = 1 << bit;
+		
+		switch (pin) {
+		case 'A': 
+			bank[0][SpecialRegister.RA0.getAddress()] = bank[0][SpecialRegister.RA0.getAddress()] | bitmask;
+			break;
+		
+		case 'B':
+			bank[0][SpecialRegister.RB0.getAddress()] = bank[0][SpecialRegister.RB0.getAddress()] | bitmask;
+			break;
+		
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + pin);
+		}
+	}
+	
+	public void ClearPin(int bit, char pin) {
+		int bitmask = 1 << bit;
+		bitmask = (~bitmask) & 0xFF;
+		
+		switch (pin) {
+		case 'A': 
+			bank[0][SpecialRegister.RA0.getAddress()] = bank[0][SpecialRegister.RA0.getAddress()] & bitmask;
+			break;
+		
+		case 'B':
+			bank[0][SpecialRegister.RB0.getAddress()] = bank[0][SpecialRegister.RB0.getAddress()] & bitmask;
+			break;
+		
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + pin);
+		}
+	}
 
 	public void writeW(int value) {
 		wRegister = value & 0b11111111;
@@ -234,5 +271,21 @@ public class DataMemory {
 	
 	public int getT0CS() {
 		return (bank[1][SpecialRegister.T0CS.getAddress()] & 0b10000);
+	}
+	
+	public int getRA4() {
+		return (bank[0][SpecialRegister.RA4.getAddress()] & 0b10000);
+	}
+	
+	public int getINTEDG0() {
+		return (bank[1][SpecialRegister.INTEDG.getAddress()] & 0b1000000);
+	}
+	
+	public int getT0SE() {
+		return (bank[1][SpecialRegister.T0SE.getAddress()] & 0b10000);
+	}
+	
+	public int getPSA() {
+		return (bank[1][SpecialRegister.PSA.getAddress()] & 0b1000);
 	}
 }

@@ -4,9 +4,6 @@ public class StackMemory {
 	private int[] stack = new int[8];
 	private int stackCounter = 0;
 	
-	public StackMemory() {
-	}
-	
 	public int get(int i) {
 		return stack[i];
 	}
