@@ -26,8 +26,6 @@ public class ControllUnit {
 	public ControllUnit() {
 	}
 
-	// THIS SHOULD BE THE FINAL CONSTRUCTOR
-	// TODO remove others in finished program
 	public ControllUnit(Window gui) {
 		this.gui = gui;
 		this.stack = new StackMemory();
@@ -46,11 +44,12 @@ public class ControllUnit {
 
 	// GUI uses this
 	public int getRuntime() {
-		int runtime = 0;
+		double runtime = 0;
 
-		// runtime in ms
-		runtime = runtimeCount * 1 / (currFrequency * 1000) * 4;
-		return runtime;
+		// runtime in micro seconds
+		runtime = (double) (4000 * runtimeCount) / (double) (currFrequency);
+
+		return (int) runtime;
 	}
 
 	public void run() {
@@ -129,7 +128,6 @@ public class ControllUnit {
 
 		// global interrupt enable
 		if (dataStorage.readBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit()) == 1) {
-			// TODO is EEIE needed?
 
 			// Timer interrupt
 			if (dataStorage.readBit(SpecialRegister.T0IE.getAddress(), SpecialRegister.T0IE.getBit()) == 1) {
@@ -157,8 +155,32 @@ public class ControllUnit {
 	}
 
 	public void pinUpdate(boolean value, int bit, char pin) {
+		// Port B Interrupts
+		if (pin == 'B') {
+			switch (bit) {
+			case 0:
+				if ((dataStorage.getTris('B') & 0x1) > 0) {
+					
+					dataStorage.setBit(SpecialRegister.INTF.getAddress(), SpecialRegister.INTF.getBit());
+				}
+				break;
+
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+				if ((dataStorage.getTris('B') & (0x1 << bit)) > 0) {
+					dataStorage.setBit(SpecialRegister.RBIF.getAddress(), SpecialRegister.RBIF.getBit());
+				}
+				break;
+
+			default:
+				//System.out.println(bit + "  " + pin + "   " + value);
+				break;
+			}
+		}
+
 		if (value) {
-			// TODO Pin B interrupt
 			dataStorage.setPin(bit, pin);
 		} else {
 			dataStorage.ClearPin(bit, pin);
@@ -172,9 +194,13 @@ public class ControllUnit {
 			dataStorage.setTMR0(timer.externalTrigger(dataStorage.getRA4(), dataStorage.getT0SE()));
 		}
 	}
-	
+
 	public int getPSA() {
 		return dataStorage.getPSA();
+	}
+
+	public void setFrequency(int frequency) {
+		this.currFrequency = frequency;
 	}
 
 	// decoding the OPC and executing it
@@ -295,8 +321,6 @@ public class ControllUnit {
 					}
 
 				}
-				// TODO multiple operations
-
 				break;
 
 			case 0xD00:
@@ -472,7 +496,6 @@ public class ControllUnit {
 	}
 
 	private void retlw(int k) {
-		// TODO test
 		dataStorage.writeW(k);
 		programmCounter = stack.pop();
 
@@ -481,7 +504,6 @@ public class ControllUnit {
 	}
 
 	private void retfie() {
-		// TODO test
 		programmCounter = stack.pop();
 		dataStorage.setBit(SpecialRegister.GIE.getAddress(), SpecialRegister.GIE.getBit());
 
@@ -569,7 +591,6 @@ public class ControllUnit {
 	}
 
 	private void btfss(int fileAdress, int bitAdress) {
-		// TODO test
 		if (dataStorage.readBit(fileAdress, bitAdress) == 1) {
 			nop();
 			incrementPC();
@@ -579,7 +600,6 @@ public class ControllUnit {
 	}
 
 	private void btfsc(int fileAdress, int bitAdress) {
-		// TODO test
 		if (dataStorage.readBit(fileAdress, bitAdress) == 0) {
 			nop();
 			incrementPC();
@@ -692,7 +712,6 @@ public class ControllUnit {
 	}
 
 	private void rlf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		int tempBit = 0;
 		tempVal = dataStorage.readByte(fileAdress);
@@ -726,7 +745,6 @@ public class ControllUnit {
 	}
 
 	private void movwf(int fileAdress) {
-		// TODO test
 		dataStorage.writeByte(fileAdress, dataStorage.readW());
 
 		runtimeCount++;
@@ -831,7 +849,6 @@ public class ControllUnit {
 	}
 
 	private void comf(int fileAdress, int destination) {
-		// TODO test
 		int tempVal = 0;
 		tempVal = dataStorage.readByte(fileAdress);
 		tempVal = ~tempVal;
@@ -902,7 +919,6 @@ public class ControllUnit {
 	}
 
 	public void updateHalfCarryFlag(int tempVal1, int tempVal2) {
-		// TODO test
 		tempVal1 = tempVal1 & 0xF;
 		tempVal2 = tempVal2 & 0xF;
 		int tempVal = tempVal1 + tempVal2;

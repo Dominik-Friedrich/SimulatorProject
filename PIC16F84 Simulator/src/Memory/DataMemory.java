@@ -42,7 +42,6 @@ public class DataMemory {
 		clearBit(SpecialRegister.RP0.getAddress(), SpecialRegister.RP0.getBit());
 	}
 
-	// TODO see how q works
 	public void reset() {
 		// Bank 0
 		writeByte(SpecialRegister.PCL.getAddress(), 0);
@@ -287,5 +286,13 @@ public class DataMemory {
 	
 	public int getPSA() {
 		return (bank[1][SpecialRegister.PSA.getAddress()] & 0b1000);
+	}
+	
+	public int getTris(char port) {
+		if (port == 'A') {
+			return bank[1][SpecialRegister.TRISA.getAddress()];
+		} else {
+			return bank[1][SpecialRegister.TRISB.getAddress()];
+		}
 	}
 }

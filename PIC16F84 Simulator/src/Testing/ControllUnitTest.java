@@ -69,8 +69,6 @@ class ControllUnitTest {
 		assertEquals(0, memoryTestee.readW());
 	}
 
-	// TODO COMF
-
 	@Test
 	void testDECF() {
 		controlTestee.execute(0b11_1001_0000);
@@ -79,8 +77,6 @@ class ControllUnitTest {
 		controlTestee.execute(0b11_0001_0000);
 		assertEquals(valR - 1 - 1, memoryTestee.readW());
 	}
-
-	// TODO DECFSZ
 
 	@Test
 	void testINCF() {
@@ -92,8 +88,6 @@ class ControllUnitTest {
 		controlTestee.execute(0b1010_0001_0000);
 		assertEquals(valR + 1 + 1, memoryTestee.readW());
 	}
-
-	// TODO INCFSZ
 
 	@Test
 	void testIORWF() {
@@ -117,8 +111,6 @@ class ControllUnitTest {
 		controlTestee.execute(0b1000_0001_0000);
 		assertEquals(valR, memoryTestee.readW());
 	}
-
-	// TODO MOVWF, NOP
 
 	@Test
 	void testRLF() {
@@ -214,8 +206,6 @@ class ControllUnitTest {
 		assertEquals(9, memoryTestee.readByte(testRegister));
 	}
 
-	// TODO BTFSC, BTFSS
-
 	@Test
 	void testADDLW() {
 		controlTestee.execute(0b11_1110_0000_0000 + valR);
@@ -243,7 +233,7 @@ class ControllUnitTest {
 		controlTestee.execute(0x0008);
 		assertEquals(0x1, controlTestee.getProgrammCounter());
 	}
-	// TODO CLRWDT, GOTO
+	// TODO CLRWDT
 
 	@Test
 	void testIORLW() {
@@ -265,8 +255,6 @@ class ControllUnitTest {
 		controlTestee.execute(0b11_0011_0000_0000 + 4);
 		assertEquals(4, memoryTestee.readW());
 	}
-
-	// TODO RETFIE, RETLW, RETURN, SLEEP
 
 	@Test
 	void testSUBLW() {

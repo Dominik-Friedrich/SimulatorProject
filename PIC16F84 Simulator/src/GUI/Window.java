@@ -27,6 +27,8 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Array;
@@ -60,24 +62,26 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 
 public class Window extends JFrame implements ActionListener {
 	private ControllUnit controller;
 	private ReadLST lstReader;
 	private AutoRun autorunner;
-	private boolean autorun = false;
 
 	private JTable table;
 	private JLabel sfrAndWVal[] = new JLabel[9];
 	private JLabel sfrBit[] = new JLabel[24];
 	private JLabel stack[] = new JLabel[8];
+	JLabel lblRuntime;
 	private JCheckBox trisA[] = new JCheckBox[8];
 	private JCheckBox trisB[] = new JCheckBox[8];
 	private JCheckBox pinA[] = new JCheckBox[5];
 	private JCheckBox pinB[] = new JCheckBox[8];
 	private JPanel programmSourceCode;
 	private JScrollPane scrollPane_1;
-	private JList<Object> speicher;
+	private JList<String> speicher;
+	DefaultListModel<String> listModel;
 
 	/**
 	 * Launch the application.
@@ -101,6 +105,7 @@ public class Window extends JFrame implements ActionListener {
 	 */
 	public Window() {
 		controller = new ControllUnit(this);
+		AutoRun.attachGUI(this);
 
 		try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
@@ -781,6 +786,7 @@ public class Window extends JFrame implements ActionListener {
 		timing.setBorder(new TitledBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(192, 192, 192)), "Timing",
 				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		timing.setBounds(779, 503, 167, 139);
+
 		getContentPane().add(timing);
 
 		JLabel lblNewLabel_5 = new JLabel("Laufzeit:");
@@ -799,9 +805,9 @@ public class Window extends JFrame implements ActionListener {
 		chckbxNewCheckBox_9.setBounds(6, 75, 151, 23);
 		timing.add(chckbxNewCheckBox_9);
 
-		JLabel lblNewLabel_6 = new JLabel("0 \u03BC");
-		lblNewLabel_6.setBounds(83, 22, 74, 14);
-		timing.add(lblNewLabel_6);
+		lblRuntime = new JLabel("0 \u03BC");
+		lblRuntime.setBounds(83, 22, 74, 14);
+		timing.add(lblRuntime);
 
 		JLabel lblNewLabel_6_1 = new JLabel("00");
 		lblNewLabel_6_1.setBounds(83, 102, 37, 14);
@@ -811,6 +817,55 @@ public class Window extends JFrame implements ActionListener {
 		comboBox.setModel(new DefaultComboBoxModel(new String[] { "32 kHz", "100 kHz", "500 kHz", "1 MHz", "2 MHz",
 				"4 MHz", "8 MHz", "12 MHz", "20 MHz" }));
 		comboBox.setBounds(83, 43, 74, 22);
+		comboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//
+				int newFreq = 0;
+
+				switch ((String) comboBox.getSelectedItem()) {
+				case "32 kHz":
+					newFreq = 32;
+					break;
+
+				case "100 kHz":
+					newFreq = 100;
+					break;
+
+				case "500 kHz":
+					newFreq = 500;
+					break;
+
+				case "1 MHz":
+					newFreq = 1000;
+					break;
+
+				case "2 MHz":
+					newFreq = 2000;
+					break;
+
+				case "4 MHz":
+					newFreq = 4000;
+					break;
+
+				case "8 MHz":
+					newFreq = 8000;
+					break;
+
+				case "12 MHz":
+					newFreq = 12000;
+					break;
+
+				case "20 MHz":
+					newFreq = 20000;
+					break;
+
+				default:
+					throw new IllegalArgumentException("Unexpected value: " + (String) comboBox.getSelectedItem());
+				}
+
+				controller.setFrequency(newFreq);
+			}
+		});
 		timing.add(comboBox);
 
 		JPanel controls = new JPanel();
@@ -836,10 +891,8 @@ public class Window extends JFrame implements ActionListener {
 		JButton btnStart = new JButton("Start");
 		btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!autorun) {
-					autorunner = new AutoRun(controller);
-					autorunner.start();
-					autorun = true;
+				if (AutoRun.isStopped()) {
+					startautoRun();
 				}
 			}
 		});
@@ -847,9 +900,8 @@ public class Window extends JFrame implements ActionListener {
 		JButton btnStop = new JButton("Stopp");
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (autorun) {
-					autorunner.stop();
-					autorun = false;
+				if (!AutoRun.isStopped()) {
+					stopautoRun();
 				}
 			}
 		});
@@ -865,6 +917,17 @@ public class Window extends JFrame implements ActionListener {
 				inputfile();
 			}
 		});
+	}
+
+	public void startautoRun() {
+		autorunner = new AutoRun(controller);
+		autorunner.start();
+		AutoRun.setStopped(false);
+	}
+
+	public void stopautoRun() {
+		autorunner.stop();
+		AutoRun.setStopped(true);
 	}
 
 	public void inputfile() {
@@ -889,12 +952,36 @@ public class Window extends JFrame implements ActionListener {
 				e1.printStackTrace();
 			}
 
-			String listeZwei[] = new String[liste.size()];
+			/*
+			 * String listeZwei[] = new String[liste.size()]; for (int i = 0; i <
+			 * liste.size(); i++) { listeZwei[i] = liste.get(i); }
+			 */
+
+			listModel = new DefaultListModel();
 			for (int i = 0; i < liste.size(); i++) {
-				listeZwei[i] = liste.get(i);
+				listModel.add(i, liste.get(i));
 			}
 
-			speicher = new JList(listeZwei);
+			speicher = new JList<String>(listModel);
+			speicher.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					JList<String> list = (JList<String>) e.getSource();
+					if (e.getClickCount() == 2) {
+
+						int index = list.getSelectedIndex();
+						String value = listModel.get(index);
+
+						// Already contains a breakpoint
+						if (value.contains("\uD83D\uDD34")) {
+							removeBreakpoint(index);
+						} else {
+							addBreakpoint(index);
+						}
+					}
+				}
+			});
+
 			programmSourceCode.add(speicher);
 			programmSourceCode.setVisible(true);
 			scrollPane_1.setViewportView(speicher);
@@ -902,6 +989,48 @@ public class Window extends JFrame implements ActionListener {
 			lstReader = new ReadLST(fileOne.getAbsolutePath());
 			controller.newProgramm(lstReader.parseHex());
 		}
+	}
+
+	public void addBreakpoint(int index) {
+		// default value in case something goes wrong
+		int breakpoint = -1;
+		String value = listModel.get(index);
+
+		try {
+			breakpoint = Integer.parseInt(value.substring(0, 4), 16);
+		} catch (Exception e2) {
+		}
+
+		value = "\uD83D\uDD34" + value;
+		AutoRun.addBreakpoint(breakpoint, index);
+
+		// Update JList
+		listModel.setElementAt(value, index);
+	}
+
+	public void removeBreakpoint(int index) {
+		// default value in case something goes wrong
+		int breakpoint = -1;
+		String value = listModel.get(index);
+
+		value = value.replace("\uD83D\uDD34", "");
+		try {
+			breakpoint = Integer.parseInt(value.substring(0, 4));
+		} catch (Exception e2) {
+		}
+
+		AutoRun.removeBreakpoint(breakpoint);
+
+		// Update JList
+		listModel.setElementAt(value, index);
+	}
+
+	public void removeBreakpointVisual(int index) {
+		String value = listModel.get(index);
+		value = value.replace("\uD83D\uDD34", "");
+
+		// Update JList
+		listModel.setElementAt(value, index);
 	}
 
 	@Override
@@ -984,22 +1113,38 @@ public class Window extends JFrame implements ActionListener {
 			} else {
 				trisA[i].setSelected(false);
 			}
-			/*
-			 * // Pin A, only 5 pins if (i > 2) { if
-			 * ((bank[0][SpecialRegister.RA0.getAddress()] & bitmask) > 0) { pinA[i -
-			 * 3].setSelected(true); } else { pinA[i - 3].setSelected(false); } }
-			 */
+
+			// Pin A, only 5 pins
+			if (i > 2) {
+				if ((bank[0][SpecialRegister.RA0.getAddress()] & bitmask) > 0) {
+					pinA[i - 3].setSelected(true);
+				} else {
+					pinA[i - 3].setSelected(false);
+				}
+			}
+
 			// Tris B
 			if ((bank[1][SpecialRegister.TRISB.getAddress()] & bitmask) > 0) {
 				trisB[i].setSelected(true);
 			} else {
 				trisB[i].setSelected(false);
 			}
-			/*
-			 * // Pin B if ((bank[0][SpecialRegister.RB0.getAddress()] & bitmask) > 0) {
-			 * pinB[i].setSelected(true); } else { pinB[i].setSelected(false); }
-			 */
+
+			// Pin B
+			if ((bank[0][SpecialRegister.RB0.getAddress()] & bitmask) > 0) {
+				pinB[i].setSelected(true);
+			} else
+
+			{
+				pinB[i].setSelected(false);
+			}
+
 		}
+
+		// Update runtime
+		lblRuntime.setText(controller.getRuntime() + " \u03BC");
+
+		// TODO watchdog
 
 		// Set selected row
 		int currCount = 0;
