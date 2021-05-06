@@ -84,6 +84,11 @@ public class ControllUnit {
 		}
 	}
 
+	/**
+	 * Initialises a new program with specified instructions
+	 * 
+	 * @param instructions List with specified instructions
+	 */
 	public void newProgramm(ArrayList<Integer> instructions) {
 		programmStorage.newProgramm(instructions);
 		dataStorage.powerOnReset();
@@ -92,6 +97,11 @@ public class ControllUnit {
 		gui.updateGui(dataStorage, stack);
 	}
 
+	/**
+	 * Registers an update on the timer
+	 * 
+	 * @param newTimerValue
+	 */
 	public void timerUpdate(int newTimerValue) {
 		timer.registerUpdate(newTimerValue);
 	}
@@ -154,13 +164,19 @@ public class ControllUnit {
 		return bRet;
 	}
 
+	/**
+	 * 
+	 * @param value
+	 * @param bit
+	 * @param pin
+	 */
 	public void pinUpdate(boolean value, int bit, char pin) {
 		// Port B Interrupts
 		if (pin == 'B') {
 			switch (bit) {
 			case 0:
 				if ((dataStorage.getTris('B') & 0x1) > 0) {
-					
+
 					dataStorage.setBit(SpecialRegister.INTF.getAddress(), SpecialRegister.INTF.getBit());
 				}
 				break;
@@ -175,7 +191,7 @@ public class ControllUnit {
 				break;
 
 			default:
-				//System.out.println(bit + "  " + pin + "   " + value);
+				// System.out.println(bit + " " + pin + " " + value);
 				break;
 			}
 		}
@@ -189,21 +205,37 @@ public class ControllUnit {
 		gui.updateGui(dataStorage, stack);
 	}
 
+	/**
+	 * Registers an external timer trigger is they are enabled
+	 */
 	public void externalTimerTrigger() {
 		if (dataStorage.getT0CS() > 0) {
 			dataStorage.setTMR0(timer.externalTrigger(dataStorage.getRA4(), dataStorage.getT0SE()));
 		}
 	}
 
+	/**
+	 * 
+	 * @return Value of PSA Bit
+	 */
 	public int getPSA() {
 		return dataStorage.getPSA();
 	}
 
+	/**
+	 * Sets the current frequency of the simulator
+	 * 
+	 * @param frequency to set
+	 */
 	public void setFrequency(int frequency) {
 		this.currFrequency = frequency;
 	}
 
-	// decoding the OPC and executing it
+	/**
+	 * Takes an OPCode and decodes it
+	 * 
+	 * @param operationCode to decode
+	 */
 	public void execute(final int operationCode) {
 		int fileAdress = operationCode & 0b00_0000_0111_1111;
 		int destination = operationCode & 0b00_0000_1000_0000;
@@ -910,7 +942,7 @@ public class ControllUnit {
 		runtimeCount++;
 	}
 
-	public void updateCarryFlag(int tempVal) {
+	private void updateCarryFlag(int tempVal) {
 		if (tempVal > 0xFF) {
 			dataStorage.setBit(SpecialRegister.C.getAddress(), SpecialRegister.C.getBit());
 		} else {
@@ -918,7 +950,7 @@ public class ControllUnit {
 		}
 	}
 
-	public void updateHalfCarryFlag(int tempVal1, int tempVal2) {
+	private void updateHalfCarryFlag(int tempVal1, int tempVal2) {
 		tempVal1 = tempVal1 & 0xF;
 		tempVal2 = tempVal2 & 0xF;
 		int tempVal = tempVal1 + tempVal2;
@@ -930,7 +962,7 @@ public class ControllUnit {
 		}
 	}
 
-	public void updateZeroFlag(int value) {
+	private void updateZeroFlag(int value) {
 		value = value & 0xFF;
 
 		if (value == 0) {

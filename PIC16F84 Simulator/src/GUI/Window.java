@@ -919,12 +919,18 @@ public class Window extends JFrame implements ActionListener {
 		});
 	}
 
+	/**
+	 * Starts the autorun mode
+	 */
 	public void startautoRun() {
 		autorunner = new AutoRun(controller);
 		autorunner.start();
 		AutoRun.setStopped(false);
 	}
 
+	/**
+	 * Stops the autorun mode
+	 */
 	public void stopautoRun() {
 		autorunner.stop();
 		AutoRun.setStopped(true);
@@ -991,6 +997,11 @@ public class Window extends JFrame implements ActionListener {
 		}
 	}
 
+	/**
+	 * Adds a breakpoint
+	 * 
+	 * @param index Index of breakpoint in the JList
+	 */
 	public void addBreakpoint(int index) {
 		// default value in case something goes wrong
 		int breakpoint = -1;
@@ -1008,6 +1019,11 @@ public class Window extends JFrame implements ActionListener {
 		listModel.setElementAt(value, index);
 	}
 
+	/**
+	 * removes the breakpoint in the autorunner AND the visual indication.
+	 * 
+	 * @param index Index of breakpoint in the JList
+	 */
 	public void removeBreakpoint(int index) {
 		// default value in case something goes wrong
 		int breakpoint = -1;
@@ -1025,6 +1041,12 @@ public class Window extends JFrame implements ActionListener {
 		listModel.setElementAt(value, index);
 	}
 
+	/**
+	 * removes the Visual indication of a breakpoint. Does nothing if no breakpoint
+	 * visual is present on given Index
+	 * 
+	 * @param index Index of breakpoint in the JList
+	 */
 	public void removeBreakpointVisual(int index) {
 		String value = listModel.get(index);
 		value = value.replace("\uD83D\uDD34", "");
@@ -1037,6 +1059,12 @@ public class Window extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 	}
 
+	/**
+	 * Updates the values shown in the GUI
+	 * 
+	 * @param dataStorage reference to Data
+	 * @param stack       reference to Stack
+	 */
 	public void updateGui(DataMemory dataStorage, StackMemory stack) {
 		final int bank[][] = dataStorage.getBank();
 		int programmCounter = controller.getProgrammCounter();

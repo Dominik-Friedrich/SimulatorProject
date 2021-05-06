@@ -12,7 +12,11 @@ public class ReadLST {
 	public Scanner scan;
 	public ArrayList<String> liste = new ArrayList<String>();
 
-	public ReadLST(String path) { // Constructor with File-Path
+	/**
+	 * 
+	 * @param path of file to read
+	 */
+	public ReadLST(String path) {
 
 		this.data = new File(path);
 		try {
@@ -23,11 +27,18 @@ public class ReadLST {
 		}
 	}
 
-	public void initializeScanner() throws FileNotFoundException { // setting up the File Scanner with fitting File
+	/**
+	 * Setting up the File Scanner with fitting File
+	 * @throws FileNotFoundException when File isn't found
+	 */
+	public void initializeScanner() throws FileNotFoundException { // 
 		this.scan = new Scanner(this.data);
 	}
 
-	public void readFile() { // Read the File and save in new String ArrayList, return new list
+	/**
+	 * Read the File and save in new String ArrayList
+	 */
+	public void readFile() {
 
 		while (this.scan.hasNextLine()) {
 			String arr[];
@@ -42,7 +53,11 @@ public class ReadLST {
 		}
 	}
 
-	public ArrayList<Integer> parseHex() { // Parsing Hex Codes in new Integer ArrayList, return new list
+	/**
+	 * Parsing Hex Codes in new Integer ArrayList
+	 * @return new Integer ArrayList
+	 */
+	public ArrayList<Integer> parseHex() {
 
 		ArrayList<Integer> hexlist = new ArrayList<Integer>();
 
